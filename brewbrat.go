@@ -1,13 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/nlopes/slack"
 )
+
+var BotId string = "<@" + os.Getenv("BOT_ID") + ">"
+var BotAlias = "@"
 
 type Errors struct {
 	Num     uint64
@@ -18,37 +23,129 @@ func (e *Errors) Error() string {
 	return fmt.Sprintf("%5d: ", e.Num) + e.Message
 }
 
-var BOT_ID string = "<@" + os.Getenv("BOT_ID") + ">"
+var MesChannel *chan slack.RTMEvent // := make(chan slack.RTMEvent)
 
-func HandleMessage(ev *slack.MessageEvent) (string, error) {
-	fmt.Printf("\nev.Text=%s\n", ev.Text)
-	iStart := strings.Index(ev.Text, BOT_ID)
-	if iStart < 0 {
-		return "", &Errors{1, "Could not find starting index"}
-	}
-	fmt.Printf("\niStart = %d\n", iStart)
-	msg := ev.Text
-	iStart += 13
-	if iStart > len(msg) {
-		return "", &Errors{2, "Index out of range"}
-	}
-
-	msg = msg[iStart:]
-	retMsg := fmt.Sprintf("text: '%s', channel %s\n", msg, ev.Channel)
-	return retMsg, nil
+type Connecter interface {
+	GetMessageChannel() *chan slack.RTMEvent
+	SendMessage(Message, Channel string)
 }
 
-func main() {
-	api := slack.New(
+type SlackConnector struct {
+	api *slack.Client
+	rtm *slack.RTM
+}
+
+type StdInputConnector struct {
+	ChnIn chan slack.RTMEvent
+}
+
+func (s *StdInputConnector) scanner(in *os.File) {
+	scanner := bufio.NewScanner(in)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+		msg := slack.RTMEvent{
+			Type: "message",
+			Data: &slack.MessageEvent{},
+		}
+
+		sMes := strings.Replace(scanner.Text(), BotAlias, BotId, 1)
+		msg.Data.(*slack.MessageEvent).Channel = "My Channel"
+		msg.Data.(*slack.MessageEvent).User = "Me"
+		msg.Data.(*slack.MessageEvent).Text = sMes
+
+		*MesChannel <- msg
+	}
+}
+
+func (s *StdInputConnector) GetMessageChannel() *chan slack.RTMEvent {
+
+	go s.scanner(os.Stdin)
+
+	s.ChnIn = make(chan slack.RTMEvent)
+	return &s.ChnIn
+}
+
+func (s *StdInputConnector) SendMessage(Message, Channel string) {
+	fmt.Println(Message)
+}
+
+func (s *SlackConnector) GetMessageChannel() *chan slack.RTMEvent {
+	s.api = slack.New(
 		os.Getenv("SLACK_BOT_TOKEN"),
 		slack.OptionDebug(true),
 		slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
 
-	rtm := api.NewRTM()
-	go rtm.ManageConnection()
+	s.rtm = s.api.NewRTM()
+	go s.rtm.ManageConnection()
 
-	for msg := range rtm.IncomingEvents {
+	return &s.rtm.IncomingEvents
+
+}
+
+func (s *SlackConnector) SendMessage(Message, Channel string) {
+	s.rtm.SendMessage(s.rtm.NewOutgoingMessage(Message, Channel))
+}
+
+func GetHelpMessage() string {
+	dat, err := ioutil.ReadFile("README.md")
+	if err != nil {
+		return "error reading help file: " + err.Error()
+	}
+
+	return string(dat)
+}
+
+func HandleCommand(message string) (string, error) {
+
+	words := strings.Split(message, " ")
+	cmdResponse := ""
+	for c, w := range words {
+		words[c] = strings.TrimSpace(strings.ToLower(w))
+	}
+	if words[1] == "help" {
+
+		cmdResponse = GetHelpMessage()
+
+	} else if words[0] == "calc" {
+
+	} else if words[0] == "list" || words[0] == "ls" {
+
+	} else if words[0] == "explain" || words[0] == "ex" {
+
+	}
+
+	return cmdResponse, nil
+}
+
+func HandleMessageEvent(ev *slack.MessageEvent) (string, error) {
+	fmt.Printf("\nev.Text=%s\n", ev.Text)
+	iStart := strings.Index(ev.Text, BotId)
+	if iStart < 0 {
+		return "", &Errors{1, "Could not find starting index"}
+	}
+	fmt.Printf("\niStart = %d\n", iStart)
+	msg := ev.Text
+	iStart += len(BotId)
+	if iStart > len(msg) {
+		return "", &Errors{2, "Index out of range"}
+	}
+
+	msg = msg[iStart:]
+	retMsg, err := HandleCommand(msg)
+	if err != nil {
+		return "Cannot handle event text: " + err.Error(), err
+	}
+
+	return fmt.Sprintf("<%s> '%s'\n", ev.Channel, retMsg), nil
+}
+
+func main() {
+
+	var conn Connecter = &StdInputConnector{}
+	MesChannel = conn.GetMessageChannel()
+
+	for msg := range *MesChannel { // rtm.IncomingEvents
 		fmt.Print("Event Received: ")
 		switch ev := msg.Data.(type) {
 		case *slack.HelloEvent:
@@ -58,15 +155,15 @@ func main() {
 			fmt.Println("Infos:", ev.Info)
 			fmt.Println("Connection counter:", ev.ConnectionCount)
 			// Replace C2147483705 with your Channel ID
-			rtm.SendMessage(rtm.NewOutgoingMessage("Hello world", "C496VLJ2D"))
+			conn.SendMessage("Hello world", "C496VLJ2D")
 
 		case *slack.MessageEvent:
 			fmt.Printf("Message: %v\n", ev)
-			message, err := HandleMessage(ev)
+			message, err := HandleMessageEvent(ev)
 			if err != nil {
-				rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Error parsing message: %s", err.Error()), ev.Channel))
+				conn.SendMessage(fmt.Sprintf("Error parsing message Event: %s", err.Error()), ev.Channel)
 			} else {
-				rtm.SendMessage(rtm.NewOutgoingMessage(message, ev.Channel))
+				conn.SendMessage(message, ev.Channel)
 			}
 		case *slack.PresenceChangeEvent:
 			fmt.Printf("Presence Change: %v\n", ev)
