@@ -20,7 +20,7 @@ type Errors struct {
 }
 
 func (e *Errors) Error() string {
-	return fmt.Sprintf("%5d: ", e.Num) + e.Message
+	return e.Message
 }
 
 var MesChannel *chan slack.RTMEvent // := make(chan slack.RTMEvent)
@@ -53,7 +53,7 @@ func (s *StdInputConnector) scanner(in *os.File) {
 		msg.Data.(*slack.MessageEvent).User = "Me"
 		msg.Data.(*slack.MessageEvent).Text = sMes
 
-		*MesChannel <- msg
+		s.ChnIn <- msg
 	}
 }
 
@@ -122,7 +122,7 @@ func HandleMessageEvent(ev *slack.MessageEvent) (string, error) {
 	fmt.Printf("\nev.Text=%s\n", ev.Text)
 	iStart := strings.Index(ev.Text, BotId)
 	if iStart < 0 {
-		return "", &Errors{1, "Could not find starting index"}
+		return "", &Errors{1, "NotForMe"}
 	}
 	fmt.Printf("\niStart = %d\n", iStart)
 	msg := ev.Text
@@ -142,7 +142,17 @@ func HandleMessageEvent(ev *slack.MessageEvent) (string, error) {
 
 func main() {
 
-	var conn Connecter = &StdInputConnector{}
+	var conn Connecter
+    
+    if len(os.Args) > 1 {
+        if os.Args[1] == "test" {
+            conn = &StdInputConnector{}
+        } else {
+            conn = &SlackConnector{}
+        }
+    }
+    
+    
 	MesChannel = conn.GetMessageChannel()
 
 	for msg := range *MesChannel { // rtm.IncomingEvents
@@ -161,7 +171,11 @@ func main() {
 			fmt.Printf("Message: %v\n", ev)
 			message, err := HandleMessageEvent(ev)
 			if err != nil {
-				conn.SendMessage(fmt.Sprintf("Error parsing message Event: %s", err.Error()), ev.Channel)
+                if err.Error() == "NotForMe" {
+                    continue
+                } else {
+				    conn.SendMessage(fmt.Sprintf("Error parsing message Event: %s", err.Error()), ev.Channel)
+                }
 			} else {
 				conn.SendMessage(message, ev.Channel)
 			}
