@@ -143,16 +143,15 @@ func HandleMessageEvent(ev *slack.MessageEvent) (string, error) {
 func main() {
 
 	var conn Connecter
-    
-    if len(os.Args) > 1 {
-        if os.Args[1] == "test" {
-            conn = &StdInputConnector{}
-        } else {
-            conn = &SlackConnector{}
-        }
-    }
-    
-    
+
+	if len(os.Args) > 1 {
+		if os.Args[1] == "test" {
+			conn = &StdInputConnector{}
+		}
+	} else {
+		conn = &SlackConnector{}
+	}
+
 	MesChannel = conn.GetMessageChannel()
 
 	for msg := range *MesChannel { // rtm.IncomingEvents
@@ -171,11 +170,11 @@ func main() {
 			fmt.Printf("Message: %v\n", ev)
 			message, err := HandleMessageEvent(ev)
 			if err != nil {
-                if err.Error() == "NotForMe" {
-                    continue
-                } else {
-				    conn.SendMessage(fmt.Sprintf("Error parsing message Event: %s", err.Error()), ev.Channel)
-                }
+				if err.Error() == "NotForMe" {
+					continue
+				} else {
+					conn.SendMessage(fmt.Sprintf("Error parsing message Event: %s", err.Error()), ev.Channel)
+				}
 			} else {
 				conn.SendMessage(message, ev.Channel)
 			}
