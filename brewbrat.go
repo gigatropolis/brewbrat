@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	"../brewbrat/calc"
+
 	"github.com/nlopes/slack"
 )
 
@@ -97,18 +99,22 @@ func GetHelpMessage() string {
 }
 
 func HandleCommand(message string) (string, error) {
-
-	words := strings.Split(message, " ")
+	var err error
+	words := strings.Split(strings.TrimSpace(message), " ")
 	cmdResponse := ""
 	for c, w := range words {
 		words[c] = strings.TrimSpace(strings.ToLower(w))
+		fmt.Printf("words[%d] = '%s'\n", c, w)
 	}
-	if words[1] == "help" {
+	if words[0] == "help" {
 
 		cmdResponse = GetHelpMessage()
 
 	} else if words[0] == "calc" {
-
+		cmdResponse, err = calc.HandleCommand(words)
+		if err != nil {
+			fmt.Printf("calc returned error::%s\n", err.Error())
+		}
 	} else if words[0] == "list" || words[0] == "ls" {
 
 	} else if words[0] == "explain" || words[0] == "ex" {
