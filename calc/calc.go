@@ -78,3 +78,39 @@ func Abv(og, fg float64) (float64, error) {
 
 	return abv, nil
 }
+
+func _refN1(OrigBrix, FinalBrix float64) float64 {
+	return 1.001843 - 0.002318474*OrigBrix - 0.000007775*(OrigBrix**2) - 0.000000034*(OrigBrix**3) + 0.00574*FinalBrix + 0.00003344*(FinalBrix**2) + 0.000000086*(FinalBrix**3)
+}
+
+func _refN2(OrigBrix, FinalBrix float64) float64 {
+	return 1.000898 + 0.003859118*OrigBrix + 0.00001370735*(OrigBrix**2) + 0.00000003742517*(OrigBrix**3)
+}
+
+func _refN3(OrigBrix, FinalBrix float64) float64 {
+	return 668.72*_refN2(OrigBrix, FinalBrix) - 463.37 - 205.347*(_refN2(OrigBrix, FinalBrix)**2)
+}
+
+/*
+	RefractoFg will convert refractometer Final gravity from original and final Brix readings from refractometer
+    http://seanterrill.com/2010/07/20/toward-a-better-refractometer-correlation/
+
+        OrigBrix (RIi)  =   Original Brix reading
+        FinalBrix (RIf) =   Final Brix Reading from refractometer
+        FG =                Final Gravity measured
+        FG = (1.001843 – 0.002318474*RIi – 0.000007775*RIi² – 0.000000034*RIi³ + 0.00574*RIf + 0.00003344*RIf² + 0.000000086*RIf³) + 0.0216*LN(1 –
+            (0.1808*(668.72*(1.000898 + 0.003859118*RIi + 0.00001370735*RIi² + 0.00000003742517*RIi³) – 463.37 –
+            205.347*(1.000898 + 0.003859118*RIi + 0.00001370735*RIi² + 0.00000003742517*RIi³)²) +
+            0.8192*(668.72*(1.001843 – 0.002318474*RIi – 0.000007775*RIi² – 0.000000034*RIi³ + 0.00574*RIf + 0.00003344*RIf² + 0.000000086*RIf³) – 463.37 –
+            205.347*(1.001843 – 0.002318474*RIi – 0.000007775*RIi² – 0.000000034*RIi³ + 0.00574*RIf + 0.00003344*RIf² + 0.000000086*RIf³)²)) /
+            (668.72*(1.000898 + 0.003859118*RIi + 0.00001370735*RIi² + 0.00000003742517*RIi³) – 463.37 –
+            205.347*(1.000898 + 0.003859118*RIi + 0.00001370735*RIi² + 0.00000003742517*RIi³)²)) + 0.0116
+*/
+func RefractoFg(OrigBrix, FinalBrix float64) float64 {
+	refN1 := _refN1(OrigBrix, FinalBrix)
+	refN2 := _refN2(OrigBrix, FinalBrix)
+	refN3 := _refN3(OrigBrix, FinalBrix)
+
+	FG := refN1 + 0.0216*math.log(1-(0.1808*(668.72*refN2-463.37-205.347*refN2**2)+0.8192*(668.72*refN1-463.37-205.347*refN1**2))/refN3) + 0.0116
+	return FG
+}
