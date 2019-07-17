@@ -2,6 +2,7 @@ package calc
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	//"fmt"
 	//"io/ioutil"
@@ -25,7 +26,7 @@ func HandleCommand(words []string) (string, error) {
 		if berr != nil {
 			return "", nil
 		}
-		message = fmt.Sprintf("Original Gravity = %.5f", og)
+		message = fmt.Sprintf("Original Gravity = %.4f", og)
 
 	} else if words[1] == "ogtobrix" {
 		if len(words) < 3 {
@@ -57,7 +58,25 @@ func HandleCommand(words []string) (string, error) {
 		}
 		message = fmt.Sprintf("ABV = %.2f%%", abv)
 
+	} else if words[1] == "refractotofg" {
+		if len(words) < 4 {
+			return "", nil
+		}
+		OriginalBrix, err := strconv.ParseFloat(words[2], 64)
+		FinalBrix, err2 := strconv.ParseFloat(words[3], 64)
+
+		if err != nil || err2 != nil {
+			return "", nil
+		}
+		finalGrav, berr := RefractoFg(OriginalBrix, FinalBrix)
+		if berr != nil {
+			return "", nil
+		}
+		og, _ := BrixToOg(OriginalBrix)
+		abv, _ := Abv(og, finalGrav)
+		message = fmt.Sprintf("Final calculated gravity = %.4f with ABV of %.2f%%", finalGrav, abv)
 	}
+
 	return message, nil
 }
 
@@ -80,15 +99,15 @@ func Abv(og, fg float64) (float64, error) {
 }
 
 func _refN1(OrigBrix, FinalBrix float64) float64 {
-	return 1.001843 - 0.002318474*OrigBrix - 0.000007775*(OrigBrix**2) - 0.000000034*(OrigBrix**3) + 0.00574*FinalBrix + 0.00003344*(FinalBrix**2) + 0.000000086*(FinalBrix**3)
+	return 1.001843 - 0.002318474*OrigBrix - 0.000007775*(math.Pow(OrigBrix, 2.0)) - 0.000000034*(math.Pow(OrigBrix, 3.0)) + 0.00574*FinalBrix + 0.00003344*(math.Pow(FinalBrix, 2.0)) + 0.000000086*(math.Pow(FinalBrix, 3.0))
 }
 
 func _refN2(OrigBrix, FinalBrix float64) float64 {
-	return 1.000898 + 0.003859118*OrigBrix + 0.00001370735*(OrigBrix**2) + 0.00000003742517*(OrigBrix**3)
+	return 1.000898 + 0.003859118*OrigBrix + 0.00001370735*(math.Pow(OrigBrix, 2.0)) + 0.00000003742517*(math.Pow(OrigBrix, 3.0))
 }
 
 func _refN3(OrigBrix, FinalBrix float64) float64 {
-	return 668.72*_refN2(OrigBrix, FinalBrix) - 463.37 - 205.347*(_refN2(OrigBrix, FinalBrix)**2)
+	return 668.72*_refN2(OrigBrix, FinalBrix) - 463.37 - 205.347*(math.Pow(_refN2(OrigBrix, FinalBrix), 2.0))
 }
 
 /*
@@ -106,11 +125,11 @@ func _refN3(OrigBrix, FinalBrix float64) float64 {
             (668.72*(1.000898 + 0.003859118*RIi + 0.00001370735*RIi² + 0.00000003742517*RIi³) – 463.37 –
             205.347*(1.000898 + 0.003859118*RIi + 0.00001370735*RIi² + 0.00000003742517*RIi³)²)) + 0.0116
 */
-func RefractoFg(OrigBrix, FinalBrix float64) float64 {
+func RefractoFg(OrigBrix, FinalBrix float64) (float64, error) {
 	refN1 := _refN1(OrigBrix, FinalBrix)
 	refN2 := _refN2(OrigBrix, FinalBrix)
 	refN3 := _refN3(OrigBrix, FinalBrix)
 
-	FG := refN1 + 0.0216*math.log(1-(0.1808*(668.72*refN2-463.37-205.347*refN2**2)+0.8192*(668.72*refN1-463.37-205.347*refN1**2))/refN3) + 0.0116
-	return FG
+	FG := refN1 + 0.0216*math.Log(1-(0.1808*(668.72*refN2-463.37-205.347*math.Pow(refN2, 2.0))+0.8192*(668.72*refN1-463.37-205.347*math.Pow(refN1, 2.0)))/refN3) + 0.0116
+	return FG, nil
 }
