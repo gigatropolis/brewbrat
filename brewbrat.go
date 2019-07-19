@@ -150,11 +150,9 @@ func main() {
 
 	var conn Connecter
 
-	if len(os.Args) > 1 {
-		if os.Args[1] == "test" {
-			conn = &StdInputConnector{}
-		}
-	} else {
+	if len(os.Args) > 1 && os.Args[1] == "test" {
+        conn = &StdInputConnector{}
+ 	} else {
 		conn = &SlackConnector{}
 	}
 

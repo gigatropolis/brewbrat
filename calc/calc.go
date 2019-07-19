@@ -59,9 +59,9 @@ func HandleCommand(words []string) (string, error) {
 		}
 		message = fmt.Sprintf("ABV = %.2f%%", abv)
 
-	} else if words[1] == "refractotofg" {
+	} else if words[1] == "refractotofg" || words[1] == "fg" {
 		if len(words) < 4 {
-			return "", nil
+			return "refractotofg requires 2 arguments <Og> <measured Fg", nil
 		}
 		OriginalBrix, err := strconv.ParseFloat(words[2], 64)
 		FinalBrix, err2 := strconv.ParseFloat(words[3], 64)
@@ -69,10 +69,20 @@ func HandleCommand(words []string) (string, error) {
 		if err != nil || err2 != nil {
 			return "", nil
 		}
+        
+        if OriginalBrix < 2 {
+            OriginalBrix, _ = OgToBrix(OriginalBrix)
+        }
+        
+        if FinalBrix < 1.06 {
+            FinalBrix, _ = OgToBrix(FinalBrix)
+        }
+        
 		finalGrav, berr := RefractoFg(OriginalBrix, FinalBrix)
 		if berr != nil {
 			return "", nil
 		}
+
 		og, _ := BrixToOg(OriginalBrix)
 		abv, _ := Abv(og, finalGrav)
 		message = fmt.Sprintf("Final calculated gravity = %.4f with ABV of %.2f%%", finalGrav, abv)
