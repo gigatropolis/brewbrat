@@ -143,7 +143,7 @@ func HandleMessageEvent(ev *slack.MessageEvent) (string, error) {
 		return "Cannot handle event text: " + err.Error(), err
 	}
 
-	return fmt.Sprintf("<%s> '%s'\n", ev.Channel, retMsg), nil
+	return retMsg, nil // fmt.Sprintf("<%s> '%s'\n", ev.Channel, retMsg), nil
 }
 
 func main() {
@@ -151,8 +151,8 @@ func main() {
 	var conn Connecter
 
 	if len(os.Args) > 1 && os.Args[1] == "test" {
-        conn = &StdInputConnector{}
- 	} else {
+		conn = &StdInputConnector{}
+	} else {
 		conn = &SlackConnector{}
 	}
 

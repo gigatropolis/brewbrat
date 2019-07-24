@@ -61,7 +61,7 @@ func HandleCommand(words []string) (string, error) {
 
 	} else if words[1] == "refractotofg" || words[1] == "fg" {
 		if len(words) < 4 {
-			return "refractotofg requires 2 arguments <Og> <measured Fg", nil
+			return "refractotofg requires 2 arguments <Og> <measured Fg>", nil
 		}
 		OriginalBrix, err := strconv.ParseFloat(words[2], 64)
 		FinalBrix, err2 := strconv.ParseFloat(words[3], 64)
@@ -69,15 +69,15 @@ func HandleCommand(words []string) (string, error) {
 		if err != nil || err2 != nil {
 			return "", nil
 		}
-        
-        if OriginalBrix < 2 {
-            OriginalBrix, _ = OgToBrix(OriginalBrix)
-        }
-        
-        if FinalBrix < 1.06 {
-            FinalBrix, _ = OgToBrix(FinalBrix)
-        }
-        
+
+		if OriginalBrix < 2 {
+			OriginalBrix, _ = OgToBrix(OriginalBrix)
+		}
+
+		if FinalBrix < 1.06 {
+			FinalBrix, _ = OgToBrix(FinalBrix)
+		}
+
 		finalGrav, berr := RefractoFg(OriginalBrix, FinalBrix)
 		if berr != nil {
 			return "", nil
