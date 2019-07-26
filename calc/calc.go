@@ -12,10 +12,11 @@ import (
 )
 
 // HandleCommand calls appropriate functions with parameters used and returns response
-func HandleCommand(words []string, message string) (string, error) {
+func HandleCommand(words []string, orMes string) (string, error) {
 	message := ""
 
-	if words[1] == "brixtoog" || words[1] == "og" {
+	switch {
+	case words[1] == "brixtoog" || words[1] == "og":
 		if len(words) < 3 {
 			return "", nil
 		}
@@ -29,7 +30,7 @@ func HandleCommand(words []string, message string) (string, error) {
 		}
 		message = fmt.Sprintf("Original Gravity = %.4f", og)
 
-	} else if words[1] == "ogtobrix" || words[1] == "brix" {
+	case words[1] == "ogtobrix" || words[1] == "brix":
 		if len(words) < 3 {
 			return "", nil
 		}
@@ -43,7 +44,7 @@ func HandleCommand(words []string, message string) (string, error) {
 		}
 		message = fmt.Sprintf("Brix = %.2f", brix)
 
-	} else if words[1] == "abv" {
+	case words[1] == "abv":
 		if len(words) < 4 {
 			return "", nil
 		}
@@ -59,7 +60,7 @@ func HandleCommand(words []string, message string) (string, error) {
 		}
 		message = fmt.Sprintf("ABV = %.2f%%", abv)
 
-	} else if words[1] == "refractotofg" || words[1] == "fg" {
+	case words[1] == "refractotofg" || words[1] == "fg":
 		if len(words) < 4 {
 			return "refractotofg requires 2 arguments <Og> <measured Fg>", nil
 		}
@@ -86,6 +87,9 @@ func HandleCommand(words []string, message string) (string, error) {
 		og, _ := BrixToOg(OriginalBrix)
 		abv, _ := Abv(og, finalGrav)
 		message = fmt.Sprintf("Final calculated gravity = %.4f with ABV of %.2f%%", finalGrav, abv)
+
+	default:
+		message = "Unrecognized command '" + words[1] + "'"
 	}
 
 	return message, nil
@@ -157,25 +161,27 @@ Return the Utilization in percent
 */
 func GetPercentUtilization(boilTime int32) float64 {
 	var percUtil float64
-	if boilTime < 6 {
+
+	switch {
+	case boilTime < 6:
 		percUtil = 5.0
-	} else if boilTime < 11 {
+	case boilTime < 11:
 		percUtil = 6.0
-	} else if boilTime < 16 {
+	case boilTime < 16:
 		percUtil = 8.0
-	} else if boilTime < 21 {
+	case boilTime < 21:
 		percUtil = 10.1
-	} else if boilTime < 26 {
+	case boilTime < 26:
 		percUtil = 12.1
-	} else if boilTime < 31 {
+	case boilTime < 31:
 		percUtil = 15.3
-	} else if boilTime < 41 {
+	case boilTime < 41:
 		percUtil = 22.8
-	} else if boilTime < 46 {
+	case boilTime < 46:
 		percUtil = 26.9
-	} else if boilTime < 51 {
+	case boilTime < 51:
 		percUtil = 28.1
-	} else {
+	default:
 		percUtil = 30.0
 	}
 
