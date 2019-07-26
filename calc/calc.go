@@ -12,7 +12,7 @@ import (
 )
 
 // HandleCommand calls appropriate functions with parameters used and returns response
-func HandleCommand(words []string) (string, error) {
+func HandleCommand(words []string, message string) (string, error) {
 	message := ""
 
 	if words[1] == "brixtoog" || words[1] == "og" {

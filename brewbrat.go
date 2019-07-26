@@ -111,7 +111,7 @@ func HandleCommand(message string) (string, error) {
 		cmdResponse = GetHelpMessage()
 
 	} else if words[0] == "calc" {
-		cmdResponse, err = calc.HandleCommand(words)
+		cmdResponse, err = calc.HandleCommand(words, message)
 		if err != nil {
 			fmt.Printf("calc returned error::%s\n", err.Error())
 		}
