@@ -15,7 +15,7 @@ import (
 func HandleCommand(words []string) (string, error) {
 	message := ""
 
-	if words[1] == "brixtoog" {
+	if words[1] == "brixtoog" || words[1] == "og" {
 		if len(words) < 3 {
 			return "", nil
 		}
@@ -29,7 +29,7 @@ func HandleCommand(words []string) (string, error) {
 		}
 		message = fmt.Sprintf("Original Gravity = %.4f", og)
 
-	} else if words[1] == "ogtobrix" {
+	} else if words[1] == "ogtobrix" || words[1] == "brix" {
 		if len(words) < 3 {
 			return "", nil
 		}
