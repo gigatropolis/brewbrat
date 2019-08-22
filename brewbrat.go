@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"../brewbrat/calc"
-
+	"../brewbrat/ingredients"
 	"github.com/nlopes/slack"
 )
 
@@ -106,22 +106,25 @@ func HandleCommand(message string) (string, error) {
 		words[c] = strings.TrimSpace(strings.ToLower(w))
 		fmt.Printf("words[%d] = '%s'\n", c, w)
 	}
-	if words[0] == "help" {
+
+	switch {
+	case words[0] == "help":
 
 		cmdResponse = GetHelpMessage()
 
-	} else if words[0] == "calc" {
+	case words[0] == "calc":
 		cmdResponse, err = calc.HandleCommand(words, message)
 		if err != nil {
 			fmt.Printf("calc returned error::%s\n", err.Error())
 		}
-	} else if words[0] == "list" || words[0] == "ls" {
-
-	} else if words[0] == "explain" || words[0] == "ex" {
+	case words[0] == "list" || words[0] == "ls":
+		cmdResponse, err = ingredients.HandleList(words, message)
+	case words[0] == "explain" || words[0] == "ex":
+		cmdResponse, err = ingredients.HandleExplaination(words, message)
 
 	}
 
-	return cmdResponse, nil
+	return cmdResponse, err
 }
 
 func HandleMessageEvent(ev *slack.MessageEvent) (string, error) {
@@ -147,6 +150,8 @@ func HandleMessageEvent(ev *slack.MessageEvent) (string, error) {
 }
 
 func main() {
+
+	ingredients.GetBeerXMLFromFile("")
 
 	var conn Connecter
 
