@@ -13,9 +13,12 @@ import (
 	"github.com/nlopes/slack"
 )
 
-var BotId string = "<@" + os.Getenv("BOT_ID") + ">"
-var BotAlias = "@"
+var botID string = "<@" + os.Getenv("BOT_ID") + ">"
+var botAlias = "@"
 
+// Errors is truct for errors interface
+// num is error number
+// Message error string
 type Errors struct {
 	Num     uint64
 	Message string
@@ -25,18 +28,22 @@ func (e *Errors) Error() string {
 	return e.Message
 }
 
+// MesChannel is mai channel all events channel through
 var MesChannel *chan slack.RTMEvent // := make(chan slack.RTMEvent)
 
+// Connecter for handling event messages
 type Connecter interface {
 	GetMessageChannel() *chan slack.RTMEvent
 	SendMessage(Message, Channel string)
 }
 
+// SlackConnector connection interface to Slack channel using nslopes
 type SlackConnector struct {
 	api *slack.Client
 	rtm *slack.RTM
 }
 
+// StdInputConnector connection interface for command line standard input. used for test
 type StdInputConnector struct {
 	ChnIn chan slack.RTMEvent
 }
@@ -50,7 +57,7 @@ func (s *StdInputConnector) scanner(in *os.File) {
 			Data: &slack.MessageEvent{},
 		}
 
-		sMes := strings.Replace(scanner.Text(), BotAlias, BotId, 1)
+		sMes := strings.Replace(scanner.Text(), botAlias, botID, 1)
 		msg.Data.(*slack.MessageEvent).Channel = "My Channel"
 		msg.Data.(*slack.MessageEvent).User = "Me"
 		msg.Data.(*slack.MessageEvent).Text = sMes
@@ -59,6 +66,7 @@ func (s *StdInputConnector) scanner(in *os.File) {
 	}
 }
 
+// GetMessageChannel is connector interface method used to setup message channel
 func (s *StdInputConnector) GetMessageChannel() *chan slack.RTMEvent {
 
 	go s.scanner(os.Stdin)
@@ -67,10 +75,13 @@ func (s *StdInputConnector) GetMessageChannel() *chan slack.RTMEvent {
 	return &s.ChnIn
 }
 
+// SendMessage is connector interface method used to send message to output device
 func (s *StdInputConnector) SendMessage(Message, Channel string) {
 	fmt.Println(Message)
 }
 
+// GetMessageChannel is connector interface method used to setup message channel
+// SlackConnector creates connection to Slack
 func (s *SlackConnector) GetMessageChannel() *chan slack.RTMEvent {
 	s.api = slack.New(
 		os.Getenv("SLACK_BOT_TOKEN"),
@@ -85,10 +96,12 @@ func (s *SlackConnector) GetMessageChannel() *chan slack.RTMEvent {
 
 }
 
+// SendMessage is connector interface method used to send message to output device
 func (s *SlackConnector) SendMessage(Message, Channel string) {
 	s.rtm.SendMessage(s.rtm.NewOutgoingMessage(Message, Channel))
 }
 
+// GetHelpMessage reurns full help message read from README.md
 func GetHelpMessage() string {
 	dat, err := ioutil.ReadFile("README.md")
 	if err != nil {
@@ -98,6 +111,8 @@ func GetHelpMessage() string {
 	return string(dat)
 }
 
+// HandleCommand main function call to handle messages to brewbrat
+// and call correct APIs
 func HandleCommand(message string) (string, error) {
 	var err error
 	words := strings.Split(strings.TrimSpace(message), " ")
@@ -120,22 +135,23 @@ func HandleCommand(message string) (string, error) {
 	case words[0] == "list" || words[0] == "ls":
 		cmdResponse, err = ingredients.HandleList(words, message)
 	case words[0] == "explain" || words[0] == "ex":
-		cmdResponse, err = ingredients.HandleExplaination(words, message)
+		cmdResponse, err = ingredients.HandleExplanation(words, message)
 
 	}
 
 	return cmdResponse, err
 }
 
+// HandleMessageEvent is main handler to event messages
 func HandleMessageEvent(ev *slack.MessageEvent) (string, error) {
 	fmt.Printf("\nev.Text=%s\n", ev.Text)
-	iStart := strings.Index(ev.Text, BotId)
+	iStart := strings.Index(ev.Text, botID)
 	if iStart < 0 {
 		return "", &Errors{1, "NotForMe"}
 	}
 	fmt.Printf("\niStart = %d\n", iStart)
 	msg := ev.Text
-	iStart += len(BotId)
+	iStart += len(botID)
 	if iStart > len(msg) {
 		return "", &Errors{2, "Index out of range"}
 	}
@@ -173,7 +189,7 @@ func main() {
 			fmt.Println("Infos:", ev.Info)
 			fmt.Println("Connection counter:", ev.ConnectionCount)
 			// Replace C2147483705 with your Channel ID
-			conn.SendMessage("Hello world", "C496VLJ2D")
+			// conn.SendMessage("Hello world", "C496VLJ2D")
 
 		case *slack.MessageEvent:
 			fmt.Printf("Message: %v\n", ev)

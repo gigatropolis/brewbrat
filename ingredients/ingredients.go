@@ -108,7 +108,8 @@ func HandleList(words []string, orMes string) (string, error) {
 	return message, nil
 }
 
-func HandleExplaination(words []string, orMes string) (string, error) {
+// HandleExplanation calls methods to describe desired beer hops, fermentables, styles, and yeast strains
+func HandleExplanation(words []string, orMes string) (string, error) {
 	message := ""
 	if len(words) < 3 {
 		return "", nil
