@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	//"fmt"
 	//"io/ioutil"
 	//"log"
 	//"os"
@@ -62,11 +61,14 @@ func HandleCommand(words []string, orMes string) (string, error) {
 
 	case words[1] == "refractotofg" || words[1] == "fg":
 		if len(words) < 4 {
-			return "refractotofg requires 2 arguments <Og> <measured Fg>", nil
+			return "refractotofg requires at least 2 arguments <Og> <measured Fg> [opt: temperature]", nil
 		}
 		OriginalBrix, err := strconv.ParseFloat(words[2], 64)
 		FinalBrix, err2 := strconv.ParseFloat(words[3], 64)
-
+		var temp float64 = 0.0
+		if len(words) > 4 {
+			temp, _ = strconv.ParseFloat(words[4], 64)
+		}
 		if err != nil || err2 != nil {
 			return "", nil
 		}
@@ -79,14 +81,15 @@ func HandleCommand(words []string, orMes string) (string, error) {
 			FinalBrix, _ = OgToBrix(FinalBrix)
 		}
 
-		finalGrav, berr := RefractoFg(OriginalBrix, FinalBrix)
+		finalGrav, adjFinalBrix, berr := RefractoFg(OriginalBrix, FinalBrix, temp)
 		if berr != nil {
 			return "", nil
 		}
 
 		og, _ := BrixToOg(OriginalBrix)
 		abv, _ := Abv(og, finalGrav)
-		message = fmt.Sprintf("Final calculated gravity = %.4f with ABV of %.2f%%", finalGrav, abv)
+
+		message = fmt.Sprintf("Final calculated gravity = %.4f with ABV of %.2f%%  (Adjusted final Brix = %0.4f)", finalGrav, abv, adjFinalBrix)
 
 	default:
 		message = "Unrecognized command '" + words[1] + "'"
@@ -116,6 +119,35 @@ func Abv(og, fg float64) (float64, error) {
 	return abv, nil
 }
 
+/*
+RefractoFg will convert refractometer Final gravity from original and final Brix readings from refractometer
+
+   Calculations from MoreBeer excel spreadsheet "THJ Refractometer_Beer.xls"
+
+  SG = 1.001843 - 0.002318474(OB) - 0.000007775(OB^2) - 0.000000034(OB^3) + 0.00574(AB) + 0.00003344(AB^2) + 0.000000086(AB^3)
+  temp adjust = (1.313454-0.132674*temp+0.002057793*(temp^2)-0.000002627634*(temp^3))*0.001
+  adjusted final Brix = -676.67+1286.4*Fg-800.47*(Fg^2)+190.74*(Fg^3)
+  OrigBrix (RIi)  =   Original Brix reading
+  FinalBrix (RIf) =   Final Brix Reading from refractometer
+  FG =                Final Gravity measured
+*/
+func RefractoFg(OrigBrix float64, FinalBrix float64, temp float64) (float64, float64, error) {
+	var calcTemp float64 = 0.0
+	var adjFinalBrix float64 = 0.0
+
+	Fg := 1.001843 - 0.002318474*(OrigBrix) - 0.000007775*(math.Pow(OrigBrix, 2.0)) - 0.000000034*(math.Pow(OrigBrix, 3.0)) + 0.00574*(FinalBrix) + 0.00003344*(math.Pow(FinalBrix, 2)) + 0.000000086*(math.Pow(FinalBrix, 3))
+
+	if temp > 10 {
+		calcTemp = (1.313454 - 0.132674*temp + 0.002057793*(math.Pow(temp, 2.0)) - 0.000002627634*(math.Pow(temp, 3.0))) * 0.001
+		fmt.Printf("Calculated temperature adjustent = %0.5f\n", calcTemp)
+		Fg += calcTemp
+	}
+
+	adjFinalBrix = -676.67 + 1286.4*Fg - 800.47*(math.Pow(Fg, 2.0)) + 190.74*(math.Pow(Fg, 3.0))
+
+	return Fg, adjFinalBrix, nil
+}
+
 func _refN1(OrigBrix, FinalBrix float64) float64 {
 	return 1.001843 - 0.002318474*OrigBrix - 0.000007775*(math.Pow(OrigBrix, 2.0)) - 0.000000034*(math.Pow(OrigBrix, 3.0)) + 0.00574*FinalBrix + 0.00003344*(math.Pow(FinalBrix, 2.0)) + 0.000000086*(math.Pow(FinalBrix, 3.0))
 }
@@ -129,7 +161,7 @@ func _refN3(OrigBrix, FinalBrix float64) float64 {
 }
 
 /*
-RefractoFg will convert refractometer Final gravity from original and final Brix readings from refractometer
+RefractoFgComplex will convert refractometer Final gravity from original and final Brix readings from refractometer
 
     http://seanterrill.com/2010/07/20/toward-a-better-refractometer-correlation/
 
@@ -144,7 +176,7 @@ RefractoFg will convert refractometer Final gravity from original and final Brix
 		(668.72*(1.000898 + 0.003859118*RIi + 0.00001370735*RIi² + 0.00000003742517*RIi³) – 463.37 –
 		205.347*(1.000898 + 0.003859118*RIi + 0.00001370735*RIi² + 0.00000003742517*RIi³)²)) + 0.0116
 */
-func RefractoFg(OrigBrix, FinalBrix float64) (float64, error) {
+func RefractoFgComplex(OrigBrix, FinalBrix float64) (float64, error) {
 	refN1 := _refN1(OrigBrix, FinalBrix)
 	refN2 := _refN2(OrigBrix, FinalBrix)
 	refN3 := _refN3(OrigBrix, FinalBrix)
