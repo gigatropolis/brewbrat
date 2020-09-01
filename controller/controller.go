@@ -15,8 +15,8 @@ func main() {
 
 	RegSensors = map[string]reflect.Type{
 
-		"TempSensor":      reflect.TypeOf(TempSensor{}),
-		"DummyTempSensor": reflect.TypeOf(DummyTempSensor{}),
+		"TempSensor":      reflect.TypeOf(control.TempSensor{}),
+		"DummyTempSensor": reflect.TypeOf(control.DummyTempSensor{}),
 	}
 
 	fmt.Println("Starting Controller...")

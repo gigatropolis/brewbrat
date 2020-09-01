@@ -14,6 +14,7 @@ import (
 // ISensor defines a Sensor
 type ISensor interface {
 	IDevice
+	InitSensor(logger *Logger, properties []Property, cnval chan<- float64) error
 	GetUnits() string
 	OnRead() (float64, error)
 	Update(value float64) error
@@ -30,7 +31,7 @@ type Sensor struct {
 }
 
 // Init called once at sensor creation before OnStart()
-func (sen *Sensor) Init(logger *Logger, properties []Property) error {
+func (sen *Sensor) InitSensor(logger *Logger, properties []Property, cnval chan<- float64) error {
 	sen.Device.Init(logger, properties)
 	sen.LogMessage("Init Sensor...")
 	return nil
@@ -53,8 +54,8 @@ type TempSensor struct {
 	Unit       string
 }
 
-func (sen *TempSensor) Init(logger *Logger, properties []Property, cnval chan float64) error {
-	sen.Sensor.Init(logger, properties)
+func (sen *TempSensor) InitSensor(logger *Logger, properties []Property, cnval chan<- float64) error {
+	sen.Sensor.InitSensor(logger, properties, cnval)
 	sen.LogMessage("init TempSensor...")
 
 	if _, err := host.Init(); err != nil {

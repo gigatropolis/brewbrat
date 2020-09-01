@@ -90,7 +90,7 @@ func (act *Actor) Off() error {
 	return nil
 }
 
-func (act *Actor) SetPower(int64 power) error {
+func (act *Actor) SetPower(power int64) error {
 	return nil
 }
 
@@ -123,4 +123,8 @@ type PropertyConfig struct {
 	Hidden  bool     `xml:"hidden,attr"`
 	Comment string   `xml:"comment,attr"`
 	Value   string   `xml:",chardata"`
+}
+
+func CreateSensorConfig(name string, sType string, hidden bool, comment string, value string, props []Properties) (SensorConfig, error) {
+	return SensorConfig{}, nil
 }
