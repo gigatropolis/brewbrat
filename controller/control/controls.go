@@ -14,12 +14,21 @@ type IActor interface {
 	IDevice
 	On() error
 	Off() error
+	SetPower(int64 power) error
+}
+
+type EqMessage struct {
+	DeviceName string
+	cmd int64
+	value float64
 }
 
 type IEquipment interface {
 	IDevice
+	Init(logger *Logger, properties []Property, <-in chan EqMessage, out<- chan EqMessage)
 	Run() error
 }
+
 type Device struct {
 	logger *Logger
 	Props  Properties
@@ -79,6 +88,38 @@ func (act *Actor) Off() error {
 	return nil
 }
 
-func (act *Actor) OnPoll() error {
+func (act *Actor) SetPower(int64 power) error {
 	return nil
+}
+
+type BrewController struct {
+	XMLName      xml.Name         `xml:"controller"`
+	Version      string           `xml:"version"`
+	Sensors      []SensorConfig   `xml:"sensors>sensor"`
+	Actors       []ActorsConfig   `xml:"actors>actor"`
+	Property   []PropertyConfig    `xml:"properties>property`
+}
+
+type SensorConfig struct {
+	XMLName      xml.Name         `xml:"sensor"`
+	Name           string          `xml:"name"`
+	Type           string          `xml:"type"`
+	Property   []PropertyConfig    `xml:"properties>property`
+
+}
+
+type ActorsConfig struct {
+	XMLName      xml.Name         `xml:"actor"`
+	Name           string          `xml:"name"`
+	Type           string          `xml:"type"`
+	Property   []PropertyConfig    `xml:"properties>property`
+}
+
+type PropertyConfig struct {
+	XMLName      xml.Name         `xml:"property"`
+	Name     string          `xml:"name,attr"`
+	Type     string          `xml:"type,attr"`
+	Hidden   bool            `xml:"hidden,attr"`
+	Comment  string          `xml:"comment,attr"`
+	Value    string          `xml:",chardata"`
 }
