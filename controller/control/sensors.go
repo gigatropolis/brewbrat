@@ -38,8 +38,9 @@ func (sen *Sensor) Init(logger *Logger, properties []Property) error {
 
 func (sen *Sensor) setValue(value float64) {
 
-	select 
+	select {}
 }
+
 // TempSensor is a 1-Wire DS18B20 temperature sensor
 // Uses netlink bus for communication
 // each temp sensor will have unique UINT64 Address

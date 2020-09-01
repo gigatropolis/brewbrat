@@ -15,7 +15,6 @@ func main() {
 
 	RegSensors = map[string]reflect.Type{
 
-		// --------------- Olympia test cases
 		"TempSensor":      reflect.TypeOf(TempSensor{}),
 		"DummyTempSensor": reflect.TypeOf(DummyTempSensor{}),
 	}
