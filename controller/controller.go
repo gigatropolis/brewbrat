@@ -3,12 +3,23 @@ package main
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"time"
 
 	"./control"
 )
 
+var RegSensors map[string]reflect.Type
+
 func main() {
+
+	RegSensors = map[string]reflect.Type{
+
+		// --------------- Olympia test cases
+		"TempSensor":      reflect.TypeOf(TempSensor{}),
+		"DummyTempSensor": reflect.TypeOf(DummyTempSensor{}),
+	}
+
 	fmt.Println("Starting Controller...")
 
 	logger := control.Logger{}
