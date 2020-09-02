@@ -64,6 +64,10 @@ func (sen *Sensor) SetValue(value float64) error {
 	return nil
 }
 
+// Run is main loop for Sensor that will be launched by Brebrat in a seperate go routine.
+// This method calls OnRead() in the main loop.
+// User doesn't need to override Run() methos but at least override OnRead() to get sensor value.
+// Override this method to change default behavior
 func (sen *Sensor) Run() error {
 
 	active := true
@@ -77,7 +81,7 @@ func (sen *Sensor) Run() error {
 			if err != nil {
 				sen.LogMessage("can't set sensor value")
 			}
-			//t1.LogMessage("Sensor value = %.3f%s", value, t1.GetUnits())
+			//sen.LogMessage("Sensor value = %.3f%s", value, t1.GetUnits())
 		}
 		time.Sleep(time.Second * 3)
 	}
