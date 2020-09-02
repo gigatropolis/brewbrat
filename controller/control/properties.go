@@ -4,9 +4,12 @@ import (
 	"fmt"
 )
 
+// Property attributes used by all devices
 type Property struct {
 	Name     string
 	PropType string
+	Hidden   bool
+	Choice   string
 	Value    interface{}
 	Comment  string
 }
@@ -23,7 +26,7 @@ func (p *Properties) Count() int {
 
 func (p *Properties) updatePropertyValue(name string, value interface{}) interface{} {
 	if _, ok := (*p)[name]; ok {
-		(*p)[name] = Property{name, (*p)[name].PropType, value, (*p)[name].Comment}
+		(*p)[name] = Property{Name: name, PropType: (*p)[name].PropType, Value: value, Comment: (*p)[name].Comment}
 	}
 	return (*p)[name].Value
 }
@@ -43,7 +46,7 @@ func (p *Properties) InitProperty(name string, proptype string, value interface{
 // AddProperty to the list of Properties. Will overwrite if already exists
 // returns the value that is added as interface{}
 func (p *Properties) AddProperty(name string, proptype string, value interface{}, comment string) interface{} {
-	(*p)[name] = Property{name, proptype, value, comment}
+	(*p)[name] = Property{Name: name, PropType: proptype, Value: value, Comment: comment}
 	return (*p)[name].Value
 }
 

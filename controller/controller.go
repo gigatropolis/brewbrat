@@ -29,23 +29,19 @@ func main() {
 	var t1 control.ISensor = &control.TempSensor{}
 
 	props := []control.Property{
-		{"Name", "string", "temp Sensor 1", "Sensor Name"},
-		{"Address", "string", uint64(7205759448148251176), "1-Wire sensor address"},
-		{"Units", "string", "°F", "Units for Sensor"},
+		{Name: "Name", PropType: "string", Hidden: false, Value: "temp Sensor 1", Comment: "Sensor Name", Choice: ""},
+		{Name: "Address", PropType: "string", Hidden: false, Value: uint64(7205759448148251176), Comment: "1-Wire sensor address", Choice: ""},
+		{Name: "Units", PropType: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
 	}
+	chnSensorValue := make(chan control.SensorMessage)
 
-	t1.Init(&logger, props)
+	t1.InitSensor(&logger, props, chnSensorValue)
 	t1.OnStart()
+	go t1.Run()
 
-	active := true
-	for active {
-		value, err := t1.OnRead()
-		if err != nil {
-			fmt.Println("can't read sensor")
-			active = false
-		} else {
-			t1.LogMessage("Sensor value = %.3f%s", value, t1.GetUnits())
-		}
+	for sensor := range chnSensorValue {
+		fmt.Printf("Recieved Value %.3f F", sensor.Value)
 		time.Sleep(time.Second * 3)
 	}
+
 }

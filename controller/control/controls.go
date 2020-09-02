@@ -6,6 +6,7 @@ type IDevice interface {
 	Init(logger *Logger, properties []Property) error
 	OnStart() error
 	OnStop() error
+	Name() string
 	LogMessage(pattern string, args ...interface{}) error
 	LogWarning(pattern string, args ...interface{}) error
 	LogError(pattern string, args ...interface{}) error
@@ -32,14 +33,16 @@ type IEquipment interface {
 }
 
 type Device struct {
-	logger *Logger
-	Props  Properties
+	logger  *Logger
+	Props   Properties
+	DevName string
 }
 
 func (dev *Device) Init(logger *Logger, properties []Property) error {
 	dev.logger = logger
 	dev.Props = NewProperties()
 	dev.Props.AddProperties(properties)
+	dev.DevName = dev.Props.InitProperty("Name", "string", "Unknown", "").(string)
 	dev.LogMessage("Init Device...")
 	return nil
 }
@@ -50,6 +53,9 @@ func (dev *Device) GetProperties() *Properties {
 
 func (dev *Device) OnStart() error {
 	return nil
+}
+func (dev *Device) Name() string {
+	return dev.DevName
 }
 
 func (dev *Device) OnStop() error {
