@@ -74,11 +74,11 @@ func (sen *Sensor) SetValue(value float64) error {
 // This method calls OnRead() in the main loop.
 // User doesn't need to override Run() methos but at least override OnRead() to get sensor value.
 // Override this method to change default behavior
-func (sen *Sensor) Run() error {
+func (sen *Sensor) startRun(fRead func() (float64, error)) error {
 
 	active := true
 	for active {
-		value, err := sen.OnRead()
+		value, err := fRead()
 		if err != nil {
 			sen.LogMessage("can't read sensor")
 			active = false
@@ -170,6 +170,8 @@ func (sen *TempSensor) OnStop() error {
 	return nil
 }
 
+// OnRead called in default loop of Run() method.
+// Use this method to return get returned from sensor
 func (sen *TempSensor) OnRead() (float64, error) {
 
 	ds18b20.ConvertAll(sen.oneBus, 12)
@@ -185,18 +187,22 @@ func (sen *TempSensor) OnRead() (float64, error) {
 	return temp.Fahrenheit(), nil
 }
 
-func (sen *TempSensor) Update(value float64) error {
+// Run can call sen.startRun(sen.OnRead) for default behavior
+// Use value returnd from sen.OnRead()
+func (sen *TempSensor) Run() error {
+	sen.startRun(sen.OnRead)
 	return nil
 }
 
 // DummyTempSensor moves temperatures up and down
 type DummyTempSensor struct {
 	Sensor
-	MaxTemp float64
-	temp    float64
-	change  float64
-	offset  float64
-	cnt     int
+	MaxTemp   float64
+	temp      float64
+	change    float64
+	offset    float64
+	cnt       int
+	direction float64
 }
 
 // InitSensor must initialize 1-wire host and call base init
@@ -218,7 +224,33 @@ func (sen *DummyTempSensor) OnStart() error {
 		sen.offset = 0.01
 	}
 
-	sen.cnt = 20
+	sen.cnt = 0
+	sen.MaxTemp = 140
+	sen.direction = 1
 
+	return nil
+}
+
+func (sen *DummyTempSensor) OnRead() (float64, error) {
+
+	temp := sen.temp
+
+	sen.temp += sen.change
+	if sen.cnt > 10 {
+		sen.change += (sen.offset * sen.direction)
+	}
+
+	if temp > sen.MaxTemp {
+		sen.direction = -sen.direction
+		sen.change = 0.01 * sen.direction
+		sen.offset = -sen.offset
+	}
+	return temp, nil
+}
+
+// Run can call sen.startRun(sen.OnRead) for default behavior
+// Use value returnd from sen.OnRead()
+func (sen *DummyTempSensor) Run() error {
+	sen.startRun(sen.OnRead)
 	return nil
 }

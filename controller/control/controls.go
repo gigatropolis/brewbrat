@@ -20,13 +20,6 @@ type DeviceDefinition struct {
 	Properties []Property
 }
 
-type IActor interface {
-	IDevice
-	On() error
-	Off() error
-	SetPower(power int64) error
-}
-
 type EquipMessage struct {
 	DeviceName string
 	cmd        int64
@@ -86,47 +79,26 @@ func (dev *Device) LogDebug(pattern string, args ...interface{}) error {
 	return nil
 }
 
-type Actor struct {
-	Device
-}
-
-func (act *Actor) Init(logger *Logger, properties []Property) error {
-	act.Device.Init(logger, properties)
-	return nil
-}
-
-func (act *Actor) On() error {
-	return nil
-}
-
-func (act *Actor) Off() error {
-	return nil
-}
-
-func (act *Actor) SetPower(power int64) error {
-	return nil
-}
-
 type BrewController struct {
 	XMLName  xml.Name         `xml:"controller"`
 	Version  string           `xml:"version"`
 	Sensors  []SensorConfig   `xml:"sensors>sensor"`
 	Actors   []ActorsConfig   `xml:"actors>actor"`
-	Property []PropertyConfig `xml:"properties>property`
+	Property []PropertyConfig `xml:"properties>property"`
 }
 
 type SensorConfig struct {
 	XMLName  xml.Name         `xml:"sensor"`
 	Name     string           `xml:"name"`
 	Type     string           `xml:"type"`
-	Property []PropertyConfig `xml:"properties>property`
+	Property []PropertyConfig `xml:"properties>property"`
 }
 
 type ActorsConfig struct {
 	XMLName  xml.Name         `xml:"actor"`
 	Name     string           `xml:"name"`
 	Type     string           `xml:"type"`
-	Property []PropertyConfig `xml:"properties>property`
+	Property []PropertyConfig `xml:"properties>property"`
 }
 
 type PropertyConfig struct {
