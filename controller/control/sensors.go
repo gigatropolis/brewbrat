@@ -10,6 +10,12 @@ import (
 	"periph.io/x/periph/host"
 )
 
+type SensorDefinition struct {
+	Name       string
+	Type       string
+	Properties []Property
+}
+
 type SensorMessage struct {
 	Name  string
 	Value float64

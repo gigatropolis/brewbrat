@@ -13,6 +13,13 @@ type IDevice interface {
 	LogDebug(pattern string, args ...interface{}) error
 }
 
+type DeviceDefinition struct {
+	Name       string
+	DevType    string
+	DevClass   string
+	Properties []Property
+}
+
 type IActor interface {
 	IDevice
 	On() error
