@@ -216,12 +216,12 @@ func (sen *DummyTempSensor) InitSensor(logger *Logger, properties []Property, cn
 func (sen *DummyTempSensor) OnStart() error {
 	if sen.GetUnits() == "°C" {
 		sen.temp = 50
-		sen.change = 0.01
-		sen.offset = 0.01
+		sen.change = 0.1
+		sen.offset = 0.1
 	} else {
 		sen.temp = 85
-		sen.change = 0.01
-		sen.offset = 0.01
+		sen.change = 0.06
+		sen.offset = 0.06
 	}
 
 	sen.cnt = 0
@@ -238,6 +238,7 @@ func (sen *DummyTempSensor) OnRead() (float64, error) {
 	sen.temp += sen.change
 	if sen.cnt > 10 {
 		sen.change += (sen.offset * sen.direction)
+		sen.cnt = 0
 	}
 
 	if temp > sen.MaxTemp {
@@ -245,6 +246,7 @@ func (sen *DummyTempSensor) OnRead() (float64, error) {
 		sen.change = 0.01 * sen.direction
 		sen.offset = -sen.offset
 	}
+	sen.cnt++
 	return temp, nil
 }
 

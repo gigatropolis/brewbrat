@@ -80,25 +80,25 @@ func (dev *Device) LogDebug(pattern string, args ...interface{}) error {
 }
 
 type BrewController struct {
-	XMLName  xml.Name         `xml:"controller"`
-	Version  string           `xml:"version"`
-	Sensors  []SensorConfig   `xml:"sensors>sensor"`
-	Actors   []ActorsConfig   `xml:"actors>actor"`
-	Property []PropertyConfig `xml:"properties>property"`
+	XMLName    xml.Name         `xml:"controller"`
+	Version    string           `xml:"version"`
+	Sensors    []SensorConfig   `xml:"sensors>sensor"`
+	Actors     []ActorsConfig   `xml:"actors>actor"`
+	Properties []PropertyConfig `xml:"properties>property"`
 }
 
 type SensorConfig struct {
-	XMLName  xml.Name         `xml:"sensor"`
-	Name     string           `xml:"name"`
-	Type     string           `xml:"type"`
-	Property []PropertyConfig `xml:"properties>property"`
+	XMLName    xml.Name         `xml:"sensor"`
+	Name       string           `xml:"name"`
+	Type       string           `xml:"type"`
+	Properties []PropertyConfig `xml:"properties>property"`
 }
 
 type ActorsConfig struct {
-	XMLName  xml.Name         `xml:"actor"`
-	Name     string           `xml:"name"`
-	Type     string           `xml:"type"`
-	Property []PropertyConfig `xml:"properties>property"`
+	XMLName    xml.Name         `xml:"actor"`
+	Name       string           `xml:"name"`
+	Type       string           `xml:"type"`
+	Properties []PropertyConfig `xml:"properties>property"`
 }
 
 type PropertyConfig struct {
@@ -107,6 +107,7 @@ type PropertyConfig struct {
 	Type    string   `xml:"type,attr"`
 	Hidden  bool     `xml:"hidden,attr"`
 	Comment string   `xml:"comment,attr"`
+	Choice  string   `xml:"choice,attr"`
 	Value   string   `xml:",chardata"`
 }
 
