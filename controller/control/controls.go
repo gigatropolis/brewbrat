@@ -108,6 +108,7 @@ type PropertyConfig struct {
 	Hidden  bool     `xml:"hidden,attr"`
 	Comment string   `xml:"comment,attr"`
 	Choice  string   `xml:"choice,attr"`
+	Select  string   `xml:"select,attr"`
 	Value   string   `xml:",chardata"`
 }
 
