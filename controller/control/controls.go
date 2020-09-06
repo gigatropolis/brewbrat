@@ -13,23 +13,13 @@ type IDevice interface {
 	LogDebug(pattern string, args ...interface{}) error
 }
 
+type DeviceState int
+
 type DeviceDefinition struct {
 	Name       string
 	DevType    string
 	DevClass   string
 	Properties []Property
-}
-
-type EquipMessage struct {
-	DeviceName string
-	cmd        int64
-	value      float64
-}
-
-type IEquipment interface {
-	IDevice
-	InitEquipment(logger *Logger, properties []Property, in chan<- EquipMessage, out <-chan EquipMessage)
-	Run() error
 }
 
 type Device struct {
