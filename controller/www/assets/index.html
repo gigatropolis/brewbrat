@@ -3,18 +3,31 @@
         <meta charset="utf-8"/>
         <script src="wasm_exec.js"></script>
         <script>
-            const go = new Go();
-            WebAssembly.instantiateStreaming(fetch("json.wasm"), go.importObject).then((result) => {
-                go.run(result.instance);
-            });
+            if (WebAssembly) {
+                 // WebAssembly.instantiateStreaming is not currently available in Safari
+                 if (WebAssembly && !WebAssembly.instantiateStreaming) { // polyfill
+                     WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                        const source = await (await resp).arrayBuffer();
+                         return await WebAssembly.instantiate(source, importObject);
+                     };
+                 }  
+
+                 const go = new Go();
+                 WebAssembly.instantiateStreaming(fetch("json.wasm"), go.importObject).then((result) => {
+                    go.run(result.instance);
+                 });
+            } else {
+               console.log("WebAssembly is not supported in your browser")
+            }
 
             var relayValue = "ON"
+            var relayName = "Relay 1"
         </script>
     </head>
     <body>
          <textarea id="jsoninput" name="jsoninput" cols="80" rows="20"></textarea>
-         <input id="button" type="submit" name="button" value="pretty json" onclick="json(ON)"/>
-         <input id="button" type="submit" name="RelayOn" value="Relay ON" onclick="actorOn(relayValue)"/>
+         <input id="button" type="submit" name="button" value="pretty json" onclick="json(jsoninput.value)"/>
+         <input id="button" type="submit" name="Relay 1" value="Relay ON" onclick="actorOn(relayName, relayValue)"/>
          <textarea id="jsonoutput" name="jsonoutput" cols="80" rows="20"></textarea>
     </body>
     <script>
@@ -22,8 +35,8 @@
             var result = formatJSON(input);  
             console.log("Value returned from Go", result);
         }
-        var actorOn = function(input) {
-            var result = UpdateRelayValue(input);
+        var actorOn = function(name, action) {
+            var result = UpdateRelayValue(name, action);
             console.log("Value returned from Go", result);
             if (relayValue == "ON")
                 relayValue = "OFF";
