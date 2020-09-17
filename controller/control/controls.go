@@ -1,12 +1,15 @@
 package control
 
-import "encoding/xml"
+import (
+	"../config"
+)
 
 type IDevice interface {
-	Init(logger *Logger, properties []Property) error
+	Init(name string, logger *Logger, properties []Property) error
 	OnStart() error
 	OnStop() error
 	Name() string
+	GetDefaultsConfig() ([]config.PropertyConfig, error)
 	LogMessage(pattern string, args ...interface{}) error
 	LogWarning(pattern string, args ...interface{}) error
 	LogError(pattern string, args ...interface{}) error
@@ -28,12 +31,12 @@ type Device struct {
 	DevName string
 }
 
-func (dev *Device) Init(logger *Logger, properties []Property) error {
+func (dev *Device) Init(name string, logger *Logger, properties []Property) error {
 	dev.logger = logger
 	dev.Props = NewProperties()
 	dev.Props.AddProperties(properties)
-	dev.DevName = dev.Props.InitProperty("Name", "string", "Unknown", "").(string)
-	dev.LogMessage("Init Device...")
+	dev.DevName = name
+	dev.LogMessage("Init Device '%s'", dev.Name())
 	return nil
 }
 
@@ -52,6 +55,7 @@ func (dev *Device) OnStop() error {
 	return nil
 }
 
+// LogMessage is wrapper for logger
 func (dev *Device) LogMessage(pattern string, args ...interface{}) error {
 	dev.logger.LogMessage(pattern, args...)
 	return nil
@@ -67,41 +71,4 @@ func (dev *Device) LogError(pattern string, args ...interface{}) error {
 func (dev *Device) LogDebug(pattern string, args ...interface{}) error {
 	dev.logger.LogDebug(pattern, args...)
 	return nil
-}
-
-type BrewController struct {
-	XMLName    xml.Name         `xml:"controller"`
-	Version    string           `xml:"version"`
-	Sensors    []SensorConfig   `xml:"sensors>sensor"`
-	Actors     []ActorsConfig   `xml:"actors>actor"`
-	Properties []PropertyConfig `xml:"properties>property"`
-}
-
-type SensorConfig struct {
-	XMLName    xml.Name         `xml:"sensor"`
-	Name       string           `xml:"name"`
-	Type       string           `xml:"type"`
-	Properties []PropertyConfig `xml:"properties>property"`
-}
-
-type ActorsConfig struct {
-	XMLName    xml.Name         `xml:"actor"`
-	Name       string           `xml:"name"`
-	Type       string           `xml:"type"`
-	Properties []PropertyConfig `xml:"properties>property"`
-}
-
-type PropertyConfig struct {
-	XMLName xml.Name `xml:"property"`
-	Name    string   `xml:"name,attr"`
-	Type    string   `xml:"type,attr"`
-	Hidden  bool     `xml:"hidden,attr"`
-	Comment string   `xml:"comment,attr"`
-	Choice  string   `xml:"choice,attr"`
-	Select  string   `xml:"select,attr"`
-	Value   string   `xml:",chardata"`
-}
-
-func CreateSensorConfig(name string, sType string, hidden bool, comment string, value string, props []Properties) (SensorConfig, error) {
-	return SensorConfig{}, nil
 }

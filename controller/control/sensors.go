@@ -4,6 +4,7 @@ import (
 	"time"
 	//"periph.io/x/periph/conn/physic"
 
+	"../config"
 	"periph.io/x/periph/conn/onewire"
 	"periph.io/x/periph/devices/ds18b20"
 	"periph.io/x/periph/experimental/host/netlink"
@@ -24,7 +25,7 @@ type SensorMessage struct {
 // ISensor defines a Sensor
 type ISensor interface {
 	IDevice
-	InitSensor(logger *Logger, properties []Property, cnval chan<- SensorMessage) error
+	InitSensor(name string, logger *Logger, properties []Property, cnval chan<- SensorMessage) error
 	GetUnits() string
 	OnRead() (float64, error)
 	SetValue(float64) error
@@ -44,8 +45,8 @@ type Sensor struct {
 }
 
 // InitSensor called once at sensor creation before OnStart()
-func (sen *Sensor) InitSensor(logger *Logger, properties []Property, cnval chan<- SensorMessage) error {
-	sen.Device.Init(logger, properties)
+func (sen *Sensor) InitSensor(name string, logger *Logger, properties []Property, cnval chan<- SensorMessage) error {
+	sen.Device.Init(name, logger, properties)
 	sen.LogMessage("Init Sensor...")
 	sen.chnValue = cnval
 	props := sen.GetProperties()
@@ -105,9 +106,18 @@ type TempSensor struct {
 	RealDevice *ds18b20.Dev
 }
 
+func (sen *TempSensor) GetDefaultsConfig() ([]config.PropertyConfig, error) {
+	return []config.PropertyConfig{
+		{Name: "Name", Type: "string", Hidden: true, Value: "temp Sensor 1", Comment: "Sensor Name", Choice: ""},
+		{Name: "Address", Type: "uint", Hidden: false, Value: "7205759448148251176", Comment: "1-Wire sensor address", Choice: ""},
+		{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
+	}, nil
+
+}
+
 // InitSensor must initialize 1-wire host and call base init
-func (sen *TempSensor) InitSensor(logger *Logger, properties []Property, cnval chan<- SensorMessage) error {
-	sen.Sensor.InitSensor(logger, properties, cnval)
+func (sen *TempSensor) InitSensor(name string, logger *Logger, properties []Property, cnval chan<- SensorMessage) error {
+	sen.Sensor.InitSensor(name, logger, properties, cnval)
 	sen.LogMessage("init TempSensor...")
 
 	if _, err := host.Init(); err != nil {
@@ -206,10 +216,18 @@ type DummyTempSensor struct {
 }
 
 // InitSensor must initialize 1-wire host and call base init
-func (sen *DummyTempSensor) InitSensor(logger *Logger, properties []Property, cnval chan<- SensorMessage) error {
-	sen.Sensor.InitSensor(logger, properties, cnval)
+func (sen *DummyTempSensor) InitSensor(name string, logger *Logger, properties []Property, cnval chan<- SensorMessage) error {
+	sen.Sensor.InitSensor(name, logger, properties, cnval)
 	sen.LogMessage("init DummyTempSensor...")
 	return nil
+}
+
+func (sen *DummyTempSensor) GetDefaultsConfig() ([]config.PropertyConfig, error) {
+	return []config.PropertyConfig{
+		{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
+		{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
+	}, nil
+
 }
 
 // OnStart setup to start running

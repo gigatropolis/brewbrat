@@ -1,6 +1,7 @@
 package control
 
 import (
+	"../config"
 	"periph.io/x/periph/conn/gpio"
 	"periph.io/x/periph/conn/gpio/gpioreg"
 	"periph.io/x/periph/host"
@@ -18,7 +19,6 @@ type IActor interface {
 	Off() error
 	SetPower(power int) error
 	GetState() DeviceState
-	SetState(state DeviceState) (DeviceState, error)
 }
 
 const (
@@ -34,8 +34,8 @@ type Actor struct {
 	Pin   gpio.PinIO
 }
 
-func (act *Actor) Init(logger *Logger, properties []Property) error {
-	act.Device.Init(logger, properties)
+func (act *Actor) Init(name string, logger *Logger, properties []Property) error {
+	act.Device.Init(name, logger, properties)
 
 	props := act.GetProperties()
 	gpio, ok := props.GetProperty("GPIO")
@@ -44,6 +44,14 @@ func (act *Actor) Init(logger *Logger, properties []Property) error {
 		act.LogMessage("Set '%s' to '%s'", gpio.Name, gpio.Value.(string))
 	}
 	return nil
+}
+
+func (sen *Actor) GetDefaultsConfig() ([]config.PropertyConfig, error) {
+	return []config.PropertyConfig{
+		{Name: "Name", Type: "string", Hidden: true, Value: "Relay 2", Comment: "relay Name", Choice: ""},
+		{Name: "GPIO", Type: "string", Hidden: false, Value: "P1_40", Comment: "GPIO by name", Choice: "", Select: "P1_36,P1_38,P1_40"},
+	}, nil
+
 }
 
 func (act *Actor) On() error {
@@ -63,13 +71,31 @@ func (act *Actor) GetState() DeviceState {
 	return act.state
 }
 
-func (act *Actor) SetState(state DeviceState) (DeviceState, error) {
-	if state < 0 || state > 100 {
-		return 0, nil // TODO return error
-	}
-	act.state = state
+type DummyRelay struct {
+	Actor
+}
 
-	return act.state, nil
+func (rel *DummyRelay) OnStart() error {
+	rel.Off()
+	return nil
+}
+
+func (rel *DummyRelay) OnStop() error {
+	rel.Off()
+	return nil
+}
+
+func (rel *DummyRelay) On() error {
+	rel.LogMessage("%s ON", rel.Name())
+	rel.state = StateOn
+	return nil
+}
+
+func (rel *DummyRelay) Off() error {
+
+	rel.LogMessage("%s OFF", rel.Name())
+	rel.state = StateOff
+	return nil
 }
 
 type SimpleRelay struct {

@@ -1,5 +1,9 @@
 package control
 
+import (
+	"time"
+)
+
 // Equipment messages
 const (
 	CmdUpdateDevices = iota + 1
@@ -24,8 +28,11 @@ type EquipMessage struct {
 
 type IEquipment interface {
 	IDevice
-	InitEquipment(logger *Logger, properties []Property, in <-chan EquipMessage, out chan<- EquipMessage) error
+	InitEquipment(name string, logger *Logger, properties []Property, in <-chan EquipMessage, out chan<- EquipMessage) error
+	AddSensor(name string) error
+	AddActor(name string) error
 	Run() error
+	NextStep() error
 }
 
 type Equipment struct {
@@ -36,8 +43,9 @@ type Equipment struct {
 	out     chan<- EquipMessage
 }
 
-func (eq *Equipment) InitEquipment(logger *Logger, properties []Property, in <-chan EquipMessage, out chan<- EquipMessage) error {
-	eq.Device.Init(logger, properties)
+// InitEquipment does that
+func (eq *Equipment) InitEquipment(name string, logger *Logger, properties []Property, in <-chan EquipMessage, out chan<- EquipMessage) error {
+	eq.Device.Init(name, logger, properties)
 
 	eq.in = in
 	eq.out = out
@@ -46,11 +54,22 @@ func (eq *Equipment) InitEquipment(logger *Logger, properties []Property, in <-c
 	return nil
 }
 
+func (eq *Equipment) AddSensor(name string) error {
+	eq.Sensors[name] = SensValue{Name: name}
+	return nil
+}
+func (eq *Equipment) AddActor(name string) error {
+	eq.Actors[name] = ActValue{Name: name}
+	return nil
+}
+
 func (eq *Equipment) readMessage() error {
 	var err error = nil
+	tWait := time.NewTimer(time.Millisecond * 4000)
 	select {
 	case inMessage := <-eq.in:
 		eq.handleMessage(inMessage)
+	case <-tWait.C:
 	default:
 	}
 	return err
@@ -77,10 +96,28 @@ func (eq *Equipment) handleMessage(message EquipMessage) error {
 
 // Run will handle reading in channel and setting values for sensors and actors
 func (eq *Equipment) Run() error {
-	eq.readMessage()
+
+	for true {
+		eq.readMessage()
+		eq.NextStep()
+		//time.Sleep(time.Second * 3)
+	}
+	return nil
+}
+
+func (eq *Equipment) NextStep() error {
 	return nil
 }
 
 type SimpleRIMM struct {
 	Equipment
+}
+
+func (rim *SimpleRIMM) InitEquipment(name string, logger *Logger, properties []Property, in <-chan EquipMessage, out chan<- EquipMessage) error {
+	rim.Equipment.InitEquipment(name, logger, properties, in, out)
+	return nil
+}
+
+func (rim *SimpleRIMM) NextStep() error {
+	return nil
 }
