@@ -144,7 +144,9 @@ func (sen *TempSensor) OnStart() error {
 
 	props := sen.GetProperties()
 	address, ok := props.GetProperty("Address")
+	sen.LogMessage("%s = %d", sen.Name(), address.Value.(uint64))
 	if !ok {
+		sen.LogMessage("Address Property Not found")
 		address.Value = addr[0]
 	}
 
@@ -152,7 +154,9 @@ func (sen *TempSensor) OnStart() error {
 	for indx, adrName := range addr {
 		sen.LogMessage("address(%d)=%d\n", indx, adrName)
 		if address.Value.(uint64) == uint64(adrName) {
+			address.Value = onewire.Address(adrName)
 			found = true
+			break
 		}
 	}
 
@@ -165,7 +169,7 @@ func (sen *TempSensor) OnStart() error {
 
 	//fmt.Printf("address2=%d", addr[2])
 	// init ds18b20
-	sensor, erSensor := ds18b20.New(oneBus, addr[0], 12)
+	sensor, erSensor := ds18b20.New(oneBus, address.Value.(onewire.Address), 12)
 
 	if erSensor != nil {
 		sen.LogMessage("Failed to get ds18b20 Sensor: %v", erSensor)
@@ -273,4 +277,32 @@ func (sen *DummyTempSensor) OnRead() (float64, error) {
 func (sen *DummyTempSensor) Run() error {
 	sen.startRun(sen.OnRead)
 	return nil
+}
+
+func GetActiveNetlinkAddresses(logger *Logger) ([]uint64, error) {
+
+	addresses := []uint64{}
+
+	if _, err := host.Init(); err != nil {
+		return nil, err
+	}
+
+	oneBus, erBus := netlink.New(001)
+	if erBus != nil {
+		logger.LogMessage("Failed to open bus: %v", erBus)
+		return addresses, erBus
+	}
+
+	// get 1wire address
+	addr, erAddr := oneBus.Search(false)
+	if erAddr != nil {
+		logger.LogMessage("Failed to get 1-wire address(es): %v", erAddr)
+		return addresses, erAddr
+	}
+
+	for indx, adrName := range addr {
+		logger.LogMessage("address(%d)=%d\n", indx, adrName)
+		addresses = append(addresses, uint64(adrName))
+	}
+	return addresses, nil
 }

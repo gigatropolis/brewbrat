@@ -2,7 +2,8 @@ package config
 
 import (
 	"encoding/xml"
-	//"../control"
+	"fmt"
+	"strconv"
 )
 
 // BrewController is all configured devices
@@ -56,22 +57,32 @@ type PropertyConfig struct {
 }
 
 // DefaultSensorConfig is temp code to return initial sensor devices for demo
-func DefaultSensorConfig() ([]SensorConfig, error) {
-	sensorsDefined := []SensorConfig{
-		{Name: "temp Sensor 1",
+func DefaultSensorConfig(adrs []uint64) ([]SensorConfig, error) {
+	tempNum := uint64(1)
+	sensorsDefined := []SensorConfig{}
+	for _, adr := range adrs {
+		sTempName := "temp Sensor" + strconv.FormatUint(tempNum, 10)
+		sTempAdress := strconv.FormatUint(adr, 10)
+		tempNum++
+		fmt.Printf("config Address = %s\n", sTempAdress)
+
+		sensorsDefined = append(sensorsDefined, SensorConfig{
+			Name: sTempName,
 			Type: "TempSensor",
 			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: "temp Sensor 1", Comment: "Sensor Name", Choice: ""},
-				{Name: "Address", Type: "uint", Hidden: false, Value: "7205759448148251176", Comment: "1-Wire sensor address", Choice: ""},
+				{Name: "Name", Type: "string", Hidden: false, Value: sTempName, Comment: "Sensor Name", Choice: ""},
+				{Name: "Address", Type: "uint", Hidden: false, Value: sTempAdress, Comment: "1-Wire sensor address", Choice: ""},
 				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
-		},
-		{Name: "Dummy Temp 1",
-			Type: "DummyTempSensor",
-			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
-				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
-		},
+		})
 	}
+
+	sensorsDefined = append(sensorsDefined, SensorConfig{
+		Name: "Dummy Temp 1",
+		Type: "DummyTempSensor",
+		Properties: []PropertyConfig{
+			{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
+			{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
+	})
 	return sensorsDefined, nil
 }
 
@@ -82,21 +93,21 @@ func DefaultRelayConfig() ([]ActorsConfig, error) {
 			Type: "SimpleRelay",
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: "Relay 1", Comment: "relay Name", Choice: ""},
-				{Name: "GPIO", Type: "string", Hidden: false, Value: "P1_38", Comment: "GPIO by name", Choice: ""},
+				{Name: "GPIO", Type: "string", Hidden: false, Value: "GPIO21", Comment: "GPIO by name", Choice: ""},
 			},
 		},
 		{Name: "Relay 2",
 			Type: "SimpleRelay",
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: "Relay 2", Comment: "relay Name", Choice: ""},
-				{Name: "GPIO", Type: "string", Hidden: false, Value: "P1_40", Comment: "GPIO by name", Choice: ""},
+				{Name: "GPIO", Type: "string", Hidden: false, Value: "GPIO20", Comment: "GPIO by name", Choice: ""},
 			},
 		},
 		{Name: "SSR 1",
 			Type: "SimpleSSR",
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: "SSR 1", Comment: "SSR Name", Choice: ""},
-				{Name: "GPIO", Type: "string", Hidden: false, Value: "P1_36", Comment: "GPIO by name", Choice: ""},
+				{Name: "GPIO", Type: "string", Hidden: false, Value: "GPIO16", Comment: "GPIO by name", Choice: ""},
 			},
 		},
 	}

@@ -89,8 +89,9 @@ func main() {
 	logger.Init()
 	logger.SetDebug(true)
 	logger.Add("default", control.LogLevelAll, os.Stdout)
+	availableLinknetAddresses, _ := control.GetActiveNetlinkAddresses(&logger)
 
-	sensorsDefined, senErr := config.DefaultSensorConfig()
+	sensorsDefined, senErr := config.DefaultSensorConfig(availableLinknetAddresses)
 	if senErr != nil {
 		logger.LogMessage("Cannot get sensors configured::%s", senErr.Error())
 	}
