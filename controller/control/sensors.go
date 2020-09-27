@@ -71,7 +71,7 @@ func (sen *Sensor) SetValue(value float64) error {
 	return nil
 }
 
-// Run is main loop for Sensor that will be launched by Brebrat in a seperate go routine.
+// Run is main loop for Sensor that will be launched by Brewbrat in a seperate go routine.
 // This method calls OnRead() in the main loop.
 // User doesn't need to override Run() methos but at least override OnRead() to get sensor value.
 // Override this method to change default behavior
@@ -212,6 +212,9 @@ func (sen *TempSensor) Run() error {
 type DummyTempSensor struct {
 	Sensor
 	MaxTemp   float64
+	minTemp   float64
+	prevState string
+	state     string
 	temp      float64
 	change    float64
 	offset    float64
@@ -234,22 +237,29 @@ func (sen *DummyTempSensor) GetDefaultsConfig() ([]config.PropertyConfig, error)
 
 }
 
+func (sen *DummyTempSensor) SendNotification(notify string) error {
+	sen.state = notify
+	return nil
+}
+
 // OnStart setup to start running
 func (sen *DummyTempSensor) OnStart() error {
 	if sen.GetUnits() == "°C" {
 		sen.temp = 50
-		sen.change = 0.1
-		sen.offset = 0.1
+		sen.MaxTemp = 100
 	} else {
-		sen.temp = 85
-		sen.change = 0.06
-		sen.offset = 0.06
+		sen.temp = 110
+		sen.MaxTemp = 212
 	}
+	sen.change = 0.1
+	sen.offset = 0.1
 
 	sen.cnt = 0
-	sen.MaxTemp = 140
 	sen.direction = 1
+	sen.minTemp = sen.temp
 
+	sen.prevState = "OFF"
+	sen.state = "OFF"
 	return nil
 }
 
@@ -263,10 +273,12 @@ func (sen *DummyTempSensor) OnRead() (float64, error) {
 		sen.cnt = 0
 	}
 
-	if temp > sen.MaxTemp {
+	if temp > sen.MaxTemp+1 {
+		temp = sen.MaxTemp
+	} else if sen.prevState != sen.state {
+		sen.prevState = sen.state
 		sen.direction = -sen.direction
-		sen.change = 0.01 * sen.direction
-		sen.offset = -sen.offset
+		sen.change = 0.1 * sen.direction
 	}
 	sen.cnt++
 	return temp, nil
