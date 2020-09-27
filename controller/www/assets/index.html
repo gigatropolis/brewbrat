@@ -24,11 +24,39 @@
             var relayName = "Relay 1"
         </script>
     </head>
+    <link rel="stylesheet" href="common.css" type="text/css" />
+    <style>
+        .sensor {
+  background: #000;
+  border: 1px solid rgb(199, 243, 5);
+  float: left;
+  font-size: 24px;
+  font-weight: bold;
+  color: rgb(225, 250, 3);
+  line-height: 34px;
+  height: 34px;
+  margin-right: -1px;
+  margin-top: -1px;
+  padding: 10;
+  text-align: left;
+  width: 80px;
+}
+body {
+  font: 14px "Century Gothic", Futura, sans-serif;
+  margin: 20px;
+  background: #000;
+}
+
+    </style>
     <body>
-         <textarea id="jsoninput" name="jsoninput" cols="80" rows="20"></textarea>
-         <input id="button" type="submit" name="button" value="pretty json" onclick="json(jsoninput.value)"/>
+        <div>
+            <span id="temp_Sensor_1" class="sensor">xxx</span>
+            <span id="temp_Sensor_2" class="sensor">xxx</span>
+            <span id="temp_Sensor_3" class="sensor">xxx</span>
+        </div>
+        <div>
          <input id="button" type="submit" name="Relay 1" value="Relay ON" onclick="actorOn(relayName, relayValue)"/>
-         <textarea id="jsonoutput" name="jsonoutput" cols="80" rows="20"></textarea>
+        </div>
     </body>
     <script>
         var json = function(input) {

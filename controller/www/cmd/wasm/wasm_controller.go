@@ -7,7 +7,18 @@ import (
 	"net/http"
 	"net/url"
 	"syscall/js"
+	"time"
 )
+
+// GOOS=js GOARCH=wasm go build -o ../../assets/json.wasm
+
+type WebError struct {
+	err string
+}
+
+func (w WebError) Error() string {
+	return w.err
+}
 
 func prettyJSON(input string) (string, error) {
 	var raw interface{}
@@ -64,6 +75,8 @@ func postActor(name string, action string) error {
 			fmt.Printf("Relay:%s Read error:%s\n", vals["Name"][0], err2.Error())
 		}
 
+		defer resp.Body.Close()
+
 		sBody := string(body)
 		if sBody == "ON" || sBody == "OFF" {
 			fmt.Printf("Status=%s\n", sBody)
@@ -71,7 +84,6 @@ func postActor(name string, action string) error {
 			fmt.Printf("Unknown response = %s\n", sBody)
 		}
 
-		resp.Body.Close()
 	}()
 
 	return nil
@@ -96,9 +108,61 @@ func postActorWapper() js.Func {
 	return actorFunc
 }
 
+func onSensorUpdate(name string) error {
+
+	fmt.Printf("onSensorUpdate %s\n", name)
+	s := fmt.Sprintf("http://127.0.0.1:8090/getsensor/%s", name)
+
+	jsDoc := js.Global().Get("document")
+	if !jsDoc.Truthy() {
+		return WebError{"Unable to get document object"}
+	}
+
+	sensor := jsDoc.Call("getElementById", name)
+	if !sensor.Truthy() {
+		return WebError{"Unable to find sensor id " + name}
+	}
+
+	go func() {
+		resp, err := http.Get(s)
+		if err != nil {
+			fmt.Printf("Sensor:%s GET error:%s\n", name, err.Error())
+			return
+		}
+
+		body, err2 := ioutil.ReadAll(resp.Body)
+		if err2 != nil {
+			fmt.Printf("Relay:%s Read error:%s\n", name, err2.Error())
+		}
+
+		defer resp.Body.Close()
+
+		sBody := string(body)
+		sensor.Set("innerText", sBody)
+
+	}()
+
+	return nil
+
+}
+
 func main() {
 	fmt.Println("Go Web Assembly")
 	js.Global().Set("formatJSON", jsonWrapper())
 	js.Global().Set("UpdateRelayValue", postActorWapper())
-	<-make(chan bool)
+	//js.Global().Set("postSensorUpdate", postSensorUpdateWapper())
+	sensors := []string{"temp_Sensor_1", "temp_Sensor_2", "temp_Sensor_3"}
+
+	//<-make(chan bool)
+	t := time.NewTicker(5000 * time.Millisecond)
+
+	for true {
+		<-t.C
+		for _, sensor := range sensors {
+			err := onSensorUpdate(sensor)
+			if err != nil {
+				fmt.Printf("sensor read error: %s\n", err.Error())
+			}
+		}
+	}
 }

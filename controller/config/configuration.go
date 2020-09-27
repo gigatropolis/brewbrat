@@ -61,7 +61,7 @@ func DefaultSensorConfig(adrs []uint64) ([]SensorConfig, error) {
 	tempNum := uint64(1)
 	sensorsDefined := []SensorConfig{}
 	for _, adr := range adrs {
-		sTempName := "temp Sensor" + strconv.FormatUint(tempNum, 10)
+		sTempName := "temp Sensor " + strconv.FormatUint(tempNum, 10)
 		sTempAdress := strconv.FormatUint(adr, 10)
 		tempNum++
 		fmt.Printf("config Address = %s\n", sTempAdress)

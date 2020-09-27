@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"./www/cmd/server"
@@ -13,10 +14,11 @@ import (
 	"./control"
 )
 
-func HandleWebMessage(msg server.ServerCommand) {
+func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
+
+	name := strings.ReplaceAll(msg.DeviceName, "_", " ")
 	switch msg.Cmd {
 	case server.CmdSetRelay:
-		name := msg.DeviceName
 		relay, ok := actors[name]
 		if ok {
 			sVal := string(msg.Value)
@@ -27,40 +29,65 @@ func HandleWebMessage(msg server.ServerCommand) {
 			}
 		}
 	case server.CmdRelayOn:
+		if relay, ok := actors[name]; ok {
+			relay.On()
+		}
 	case server.CmdRelayOff:
+		if relay, ok := actors[name]; ok {
+			relay.Off()
+		}
+	case server.CmdGetSensorValue:
+		if sensor, ok := sensValues[name]; ok {
+			val := fmt.Sprintf("%.4f", sensor)
+			msg.ChanReturn <- val
+		} else {
+			msg.ChanReturn <- "bad"
+		}
 	default:
 
 	}
 }
-func HandleDevices(sensors map[string]control.ISensor, actors map[string]control.IActor, chnSensor chan control.SensorMessage) {
+
+// OnHandleMessages called when idle to update any messages ect
+func OnHandleMessages() {
+
+}
+
+func HandleDevices(sensors map[string]control.ISensor, actors map[string]control.IActor, chnSensor chan control.SensorMessage, sensValues SensorValues) {
 	t := time.NewTicker(5000 * time.Millisecond)
-	state := true
+	//state := true
 
 	for true {
 		select {
 		case resvMsg := <-chnSensor:
 			name := resvMsg.Name
 			fmt.Printf("Recieved from '%s': Value %.3f%s\n", name, resvMsg.Value, sensors[name].GetUnits())
+			sensValues[resvMsg.Name] = resvMsg.Value
 		case <-t.C:
-			for _, act := range actors {
-				if state {
-					act.On()
-				} else {
-					act.Off()
+			OnHandleMessages()
+			/*
+				for _, act := range actors {
+					if state {
+						act.On()
+					} else {
+						act.Off()
+					}
+					//time.Sleep(time.Millisecond * 250)
 				}
-				//time.Sleep(time.Millisecond * 250)
-			}
-			if state {
-				state = false
-			} else {
-				state = true
-			}
+				if state {
+					state = false
+				} else {
+					state = true
+				}
+			*/
 		}
 	}
 }
 
 //RegDevices stores all sensor types that can be used.
 type RegDevices map[string]reflect.Type
+
+type SensorValues map[string]float64
 
 var actors map[string]control.IActor
 var sensors map[string]control.ISensor
@@ -73,6 +100,7 @@ func main() {
 
 	sensors = make(map[string]control.ISensor)
 	actors = make(map[string]control.IActor)
+	sensorValues := make(SensorValues)
 
 	regDevices := RegDevices{
 
@@ -131,7 +159,7 @@ func main() {
 	//		fmt.Printf("Recieved from '%s': Value %.3f%s\n", name, senMsg.Value, sensors[name].GetUnits())
 	//	}
 
-	go HandleDevices(sensors, actors, chnSensorValue)
+	go HandleDevices(sensors, actors, chnSensorValue, sensorValues)
 
 	go server.RunWebServer(svrIn, svrOut)
 
@@ -141,7 +169,7 @@ func main() {
 		select {
 		case in := <-svrOut:
 			logger.LogMessage("Got message")
-			HandleWebMessage(in)
+			HandleWebMessage(in, sensorValues)
 		case <-t.C:
 			logger.LogMessage("tick")
 		}

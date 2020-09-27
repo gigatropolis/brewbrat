@@ -15,6 +15,7 @@ const (
 	CmdRelayOn
 	CmdSetRelay
 	CmdRelaySetPower
+	CmdGetSensorValue
 )
 
 func enableCors(w *http.ResponseWriter) {
@@ -35,10 +36,25 @@ func setActor(w http.ResponseWriter, r *http.Request) {
 	svrChanOut <- ServerCommand{Cmd: CmdSetRelay, DeviceName: vars["name"], Value: []byte(vars["cmd"])}
 }
 
+func getSensorValue(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	//fmt.Println("getSensorValue()")
+	vars := mux.Vars(r)
+	w.WriteHeader(http.StatusOK)
+
+	ret := make(chan string)
+	svrChanOut <- ServerCommand{Cmd: CmdGetSensorValue, DeviceName: vars["name"], ChanReturn: ret}
+	retValue := <-ret
+
+	fmt.Println("getSensorValue return received: ", retValue)
+	fmt.Fprintf(w, "%s", retValue)
+}
+
 type ServerCommand struct {
 	Cmd        int
 	DeviceName string
 	Value      []byte
+	ChanReturn chan string
 }
 
 type SvrChanIn chan ServerCommand
@@ -55,6 +71,7 @@ func RunWebServer(in SvrChanIn, out SvrChanOut) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/setactor/{name}/{cmd}", setActor)
+	r.HandleFunc("/getsensor/{name}", getSensorValue)
 
 	// This will serve files under http://localhost:8000/static/<filename>
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("www/assets"))))
