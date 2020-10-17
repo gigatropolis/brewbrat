@@ -63,7 +63,7 @@ func (eq *Equipment) AddActor(name string) error {
 	return nil
 }
 
-func (eq *Equipment) readMessage() error {
+func (eq *Equipment) readMessages() error {
 	var err error = nil
 	tWait := time.NewTimer(time.Millisecond * 4000)
 	select {
@@ -81,14 +81,14 @@ func (eq *Equipment) handleMessage(message EquipMessage) error {
 	case CmdUpdateDevices:
 		for _, sensor := range message.Sensors {
 			s := eq.Sensors[sensor.Name]
-			s.Name = sensor.Name
 			s.Value = sensor.Value
+			eq.Sensors[sensor.Name] = s
 		}
 		for _, actor := range message.Actors {
 			a := eq.Actors[actor.Name]
-			a.Name = actor.Name
 			a.State = actor.State
 			a.Power = actor.Power
+			eq.Actors[actor.Name] = a
 		}
 	}
 	return nil
@@ -98,7 +98,7 @@ func (eq *Equipment) handleMessage(message EquipMessage) error {
 func (eq *Equipment) Run() error {
 
 	for true {
-		eq.readMessage()
+		eq.readMessages()
 		eq.NextStep()
 		//time.Sleep(time.Second * 3)
 	}

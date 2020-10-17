@@ -56,34 +56,69 @@ type PropertyConfig struct {
 	Value   string   `xml:",chardata"`
 }
 
+func DefaultEquipment(actors []ActorsConfig, sensors []SensorConfig, dummy bool) ([]EquipmentConfig, error) {
+	eq := []EquipmentConfig{}
+
+	if dummy {
+
+	} else {
+
+	}
+	return eq, nil
+}
+
 // DefaultSensorConfig is temp code to return initial sensor devices for demo
-func DefaultSensorConfig(adrs []uint64) ([]SensorConfig, error) {
+func DefaultSensorConfig(adrs []uint64, dummy bool) ([]SensorConfig, error) {
 	tempNum := uint64(1)
 	sensorsDefined := []SensorConfig{}
-	for _, adr := range adrs {
-		sTempName := "temp Sensor " + strconv.FormatUint(tempNum, 10)
-		sTempAdress := strconv.FormatUint(adr, 10)
-		tempNum++
-		fmt.Printf("config Address = %s\n", sTempAdress)
+
+	if dummy {
+		for i := 1; i <= 3; i++ {
+			sNum := strconv.FormatInt(1, 10)
+			sensorsDefined = append(sensorsDefined, SensorConfig{
+				Name: "Dummy Temp " + sNum,
+				Type: "DummyTempSensor",
+				Properties: []PropertyConfig{
+					{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Temp " + sNum, Comment: "Sensor Name", Choice: ""},
+					{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
+			})
+		}
+	} else {
+		for _, adr := range adrs {
+			sTempName := "temp Sensor " + strconv.FormatUint(tempNum, 10)
+			sTempAdress := strconv.FormatUint(adr, 10)
+			tempNum++
+			fmt.Printf("config Address = %s\n", sTempAdress)
+
+			sensorsDefined = append(sensorsDefined, SensorConfig{
+				Name: sTempName,
+				Type: "TempSensor",
+				Properties: []PropertyConfig{
+					{Name: "Name", Type: "string", Hidden: false, Value: sTempName, Comment: "Sensor Name", Choice: ""},
+					{Name: "Address", Type: "uint", Hidden: false, Value: sTempAdress, Comment: "1-Wire sensor address", Choice: ""},
+					{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
+			})
+		}
 
 		sensorsDefined = append(sensorsDefined, SensorConfig{
-			Name: sTempName,
-			Type: "TempSensor",
+			Name: "Dummy Temp 1",
+			Type: "DummyTempSensor",
 			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: sTempName, Comment: "Sensor Name", Choice: ""},
-				{Name: "Address", Type: "uint", Hidden: false, Value: sTempAdress, Comment: "1-Wire sensor address", Choice: ""},
+				{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
 				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
 		})
 	}
 
-	sensorsDefined = append(sensorsDefined, SensorConfig{
-		Name: "Dummy Temp 1",
-		Type: "DummyTempSensor",
-		Properties: []PropertyConfig{
-			{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
-			{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
-	})
 	return sensorsDefined, nil
+}
+
+func DefaultConfiguration(adrs []uint64, dummy bool) (BrewController, error) {
+	brewController := BrewController{}
+	var err error
+	brewController.Sensors, err = DefaultSensorConfig(adrs, dummy)
+	brewController.Actors, err = DefaultRelayConfig()
+	brewController.Equipment, err = DefaultEquipment(brewController.Actors, brewController.Sensors, dummy)
+	return brewController, err
 }
 
 // DefaultRelayConfig is temp code to return initial relay devices for demo
