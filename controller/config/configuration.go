@@ -56,13 +56,32 @@ type PropertyConfig struct {
 	Value   string   `xml:",chardata"`
 }
 
-func DefaultEquipment(actors []ActorsConfig, sensors []SensorConfig, dummy bool) ([]EquipmentConfig, error) {
+func DefaultEquipment(dummy bool) ([]EquipmentConfig, error) {
 	eq := []EquipmentConfig{}
 
 	if dummy {
+		eq = append(eq, EquipmentConfig{
+			Name: "Dummy Equipment 1",
+			Type: "SimpleRIMM",
+			Properties: []PropertyConfig{
+				{Name: "Temp Sensor", Type: "string", Hidden: false, Value: "Temp Sensor 1", Comment: "Sensor Name", Choice: ""},
+				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
+				{Name: "Pump", Type: "string", Hidden: false, Value: "Dummy Relay 1", Comment: "Units for Sensor", Choice: ""},
+				{Name: "Circulator", Type: "string", Hidden: false, Value: "Dummy Relay 2", Comment: "Units for Sensor", Choice: ""},
+				{Name: "Heater", Type: "string", Hidden: false, Value: "Dummy Relay 3", Comment: "Units for Sensor", Choice: ""}},
+		})
 
 	} else {
-
+		eq = append(eq, EquipmentConfig{
+			Name: "Equipment 1",
+			Type: "SimpleRIMM",
+			Properties: []PropertyConfig{
+				{Name: "Temp Sensor", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
+				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
+				{Name: "Pump", Type: "string", Hidden: false, Value: "Relay 1", Comment: "Units for Sensor", Choice: ""},
+				{Name: "Circulator", Type: "string", Hidden: false, Value: "Relay 2", Comment: "Units for Sensor", Choice: ""},
+				{Name: "Heater", Type: "string", Hidden: false, Value: "SSR 1", Comment: "Units for Sensor", Choice: ""}},
+		})
 	}
 	return eq, nil
 }
@@ -117,7 +136,7 @@ func DefaultConfiguration(adrs []uint64, dummy bool) (BrewController, error) {
 	var err error
 	brewController.Sensors, err = DefaultSensorConfig(adrs, dummy)
 	brewController.Actors, err = DefaultRelayConfig()
-	brewController.Equipment, err = DefaultEquipment(brewController.Actors, brewController.Sensors, dummy)
+	brewController.Equipment, err = DefaultEquipment(dummy)
 	return brewController, err
 }
 
@@ -143,6 +162,24 @@ func DefaultRelayConfig() ([]ActorsConfig, error) {
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: "SSR 1", Comment: "SSR Name", Choice: ""},
 				{Name: "GPIO", Type: "string", Hidden: false, Value: "GPIO16", Comment: "GPIO by name", Choice: ""},
+			},
+		},
+		{Name: "Dummy Relay 1",
+			Type: "DummyRelay",
+			Properties: []PropertyConfig{
+				{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Relay 1", Comment: "Dummy relay Name", Choice: ""},
+			},
+		},
+		{Name: "Dummy Relay 2",
+			Type: "DummyRelay",
+			Properties: []PropertyConfig{
+				{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Relay 2", Comment: "Dummy relay Name", Choice: ""},
+			},
+		},
+		{Name: "Dummy Relay 3",
+			Type: "DummyRelay",
+			Properties: []PropertyConfig{
+				{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Relay 3", Comment: "Dummy relay Name", Choice: ""},
 			},
 		},
 	}

@@ -91,6 +91,7 @@ type SensorValues map[string]float64
 
 var actors map[string]control.IActor
 var sensors map[string]control.ISensor
+var equipment map[string]control.IEquipment
 
 func main() {
 
@@ -154,6 +155,19 @@ func main() {
 		actor.OnStart()
 	}
 
+	EquipmentDefined, eqErr := config.DefaultEquipment(false)
+	if eqErr != nil {
+		logger.LogMessage("Cannot Get default Equipment::%s", relErr.Error())
+	}
+
+	for _, eq := range EquipmentDefined {
+
+		if _, ok := regDevices[eq.Type]; ok {
+			t1 := reflect.New(regDevices[eq.Type]).Interface().(control.IEquipment)
+			t1.Init(eq.Name, &logger, toProperties(eq.Properties))
+			equipment[eq.Name] = t1
+		}
+	}
 	//	for senMsg := range chnSensorValue {
 	//		name := senMsg.Name
 	//		fmt.Printf("Recieved from '%s': Value %.3f%s\n", name, senMsg.Value, sensors[name].GetUnits())
