@@ -161,7 +161,7 @@ type SimpleRIMM struct {
 	PowerOn       int
 	PowerOff      int
 	TempProbeName string
-	HeaterName
+	HeaterName    string
 	PumpName      string
 	AgitatorName  string
 }
@@ -169,7 +169,7 @@ type SimpleRIMM struct {
 func (rim *SimpleRIMM) InitEquipment(name string, logger *Logger, properties []Property, in <-chan EquipMessage, out chan<- EquipMessage) error {
 	rim.Equipment.InitEquipment(name, logger, properties, in, out)
 
-	props := eq.GetProperties()
+	props := rim.GetProperties()
 	rim.PowerOn = props.InitProperty("Power On", "int", 147, "Power goes on if temperature drops below this value").(int)
 	rim.PowerOff = props.InitProperty("Power Off", "int", 150, "Power goes Off if temperature goes above this value").(int)
 	rim.TempProbeName = props.InitProperty("Temperature Sensor", "string", "Dummy Temp 1", "Name of Temperature Sensor").(string)
@@ -189,6 +189,17 @@ func (rim *SimpleRIMM) NextStep() error {
 }
 
 func (rim *SimpleRIMM) updateActors() error {
+	var err error = nil
+	switch rim.Mode {
+	case EqModeHistorisis:
+		err = rim.updateHistorisis()
+	case EqModePIDControl:
+		err = rim.updatePID()
+	}
+	return err
+}
+
+func (rim *SimpleRIMM) updateHistorisis() error {
 
 	temp, ok := rim.Sensors[rim.TempProbeName]
 	if !ok {
@@ -196,8 +207,19 @@ func (rim *SimpleRIMM) updateActors() error {
 	}
 
 	if int(temp.Value) > rim.PowerOff {
-		if _, ok = rim.Actors[rim.HeaterName] {
-			rim.out <- EquipMessage{CmdActorOff}
-		} 
+		if _, ok = rim.Actors[rim.HeaterName]; ok {
+			rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOff}
+		}
 	}
+	if int(temp.Value) < rim.PowerOn {
+		if _, ok = rim.Actors[rim.HeaterName]; ok {
+			rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOn}
+		}
+	}
+	return nil
+}
+
+func (rim *SimpleRIMM) updatePID() error {
+	var err error = nil
+	return err
 }

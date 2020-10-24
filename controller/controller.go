@@ -98,6 +98,8 @@ func main() {
 	chnSensorValue := make(chan control.SensorMessage)
 	svrIn := make(server.SvrChanIn)
 	svrOut := make(server.SvrChanOut)
+	EqIn := make(chan control.EquipMessage)
+	EqOut := make(chan control.EquipMessage)
 
 	sensors = make(map[string]control.ISensor)
 	actors = make(map[string]control.IActor)
@@ -110,6 +112,7 @@ func main() {
 		"DummyRelay":      reflect.TypeOf(control.DummyRelay{}),
 		"SimpleRelay":     reflect.TypeOf(control.SimpleRelay{}),
 		"SimpleSSR":       reflect.TypeOf(control.SimpleSSR{}),
+		"SimpleRIMM":      reflect.TypeOf(control.SimpleRIMM{}),
 	}
 
 	fmt.Println("Starting Controller...")
@@ -120,12 +123,14 @@ func main() {
 	logger.Add("default", control.LogLevelAll, os.Stdout)
 	availableLinknetAddresses, _ := control.GetActiveNetlinkAddresses(&logger)
 
-	sensorsDefined, senErr := config.DefaultSensorConfig(availableLinknetAddresses, false)
-	if senErr != nil {
-		logger.LogMessage("Cannot get sensors configured::%s", senErr.Error())
+	rels := []string{"GPIO21", "GPIO20"}
+	ssrs := []string{"GPIO16"}
+	defaultConfiguration, conErr := config.DefaultConfiguration(availableLinknetAddresses, rels, ssrs, false)
+	if conErr != nil {
+		logger.LogMessage("Unable to create default configuration::%s", conErr.Error())
 	}
 
-	for _, sensor := range sensorsDefined {
+	for _, sensor := range defaultConfiguration.Sensors {
 		if _, ok := regDevices[sensor.Type]; ok {
 			t1 := reflect.New(regDevices[sensor.Type]).Interface().(control.ISensor)
 			t1.InitSensor(sensor.Name, &logger, toProperties(sensor.Properties), chnSensorValue)
@@ -138,12 +143,7 @@ func main() {
 		go sensor.Run()
 	}
 
-	relaysDefined, relErr := config.DefaultRelayConfig()
-	if relErr != nil {
-		logger.LogMessage("Cannot get relays configured::%s", relErr.Error())
-	}
-
-	for _, actor := range relaysDefined {
+	for _, actor := range defaultConfiguration.Actors {
 		if _, ok := regDevices[actor.Type]; ok {
 			t1 := reflect.New(regDevices[actor.Type]).Interface().(control.IActor)
 			t1.Init(actor.Name, &logger, toProperties(actor.Properties))
@@ -155,23 +155,18 @@ func main() {
 		actor.OnStart()
 	}
 
-	EquipmentDefined, eqErr := config.DefaultEquipment(false)
-	if eqErr != nil {
-		logger.LogMessage("Cannot Get default Equipment::%s", relErr.Error())
-	}
-
-	for _, eq := range EquipmentDefined {
+	for _, eq := range defaultConfiguration.Equipment {
 
 		if _, ok := regDevices[eq.Type]; ok {
 			t1 := reflect.New(regDevices[eq.Type]).Interface().(control.IEquipment)
-			t1.Init(eq.Name, &logger, toProperties(eq.Properties))
+			t1.InitEquipment(eq.Name, &logger, toProperties(eq.Properties), EqIn, EqOut)
 			equipment[eq.Name] = t1
 		}
 	}
-	//	for senMsg := range chnSensorValue {
-	//		name := senMsg.Name
-	//		fmt.Printf("Recieved from '%s': Value %.3f%s\n", name, senMsg.Value, sensors[name].GetUnits())
-	//	}
+
+	for _, eq := range equipment {
+		eq.OnStart()
+	}
 
 	go HandleDevices(sensors, actors, chnSensorValue, sensorValues)
 

@@ -131,57 +131,47 @@ func DefaultSensorConfig(adrs []uint64, dummy bool) ([]SensorConfig, error) {
 	return sensorsDefined, nil
 }
 
-func DefaultConfiguration(adrs []uint64, dummy bool) (BrewController, error) {
+func DefaultConfiguration(adrs []uint64, relayGPIO []string, ssrGPIO []string, dummy bool) (BrewController, error) {
 	brewController := BrewController{}
 	var err error
 	brewController.Sensors, err = DefaultSensorConfig(adrs, dummy)
-	brewController.Actors, err = DefaultRelayConfig()
+	brewController.Actors, err = DefaultRelayConfig(relayGPIO, ssrGPIO)
 	brewController.Equipment, err = DefaultEquipment(dummy)
 	return brewController, err
 }
 
 // DefaultRelayConfig is temp code to return initial relay devices for demo
-func DefaultRelayConfig() ([]ActorsConfig, error) {
-	relayDefined := []ActorsConfig{
-		{Name: "Relay 1",
+func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string) ([]ActorsConfig, error) {
+	relayDefined := []ActorsConfig{}
+
+	for indx, rel := range relayGPIO {
+		name := fmt.Sprint("Relay %d", indx+1)
+		relayDefined = append(relayDefined, ActorsConfig{Name: name,
 			Type: "SimpleRelay",
 			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: "Relay 1", Comment: "relay Name", Choice: ""},
-				{Name: "GPIO", Type: "string", Hidden: false, Value: "GPIO21", Comment: "GPIO by name", Choice: ""},
+				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "relay Name", Choice: ""},
+				{Name: "GPIO", Type: "string", Hidden: false, Value: rel, Comment: "GPIO by name", Choice: ""},
 			},
-		},
-		{Name: "Relay 2",
-			Type: "SimpleRelay",
-			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: "Relay 2", Comment: "relay Name", Choice: ""},
-				{Name: "GPIO", Type: "string", Hidden: false, Value: "GPIO20", Comment: "GPIO by name", Choice: ""},
-			},
-		},
-		{Name: "SSR 1",
+		})
+	}
+	for indx, ssrs := range ssrGPIO {
+		name := fmt.Sprint("SSR %d", indx+1)
+		relayDefined = append(relayDefined, ActorsConfig{Name: name,
 			Type: "SimpleSSR",
 			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: "SSR 1", Comment: "SSR Name", Choice: ""},
-				{Name: "GPIO", Type: "string", Hidden: false, Value: "GPIO16", Comment: "GPIO by name", Choice: ""},
+				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "SSR Name", Choice: ""},
+				{Name: "GPIO", Type: "string", Hidden: false, Value: ssrs, Comment: "GPIO by name", Choice: ""},
 			},
-		},
-		{Name: "Dummy Relay 1",
+		})
+	}
+	for indx := 1; indx <= 4; indx++ {
+		name := fmt.Sprint("Dummy Relay %d", indx)
+		relayDefined = append(relayDefined, ActorsConfig{Name: name,
 			Type: "DummyRelay",
 			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Relay 1", Comment: "Dummy relay Name", Choice: ""},
+				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "Dummy relay Name", Choice: ""},
 			},
-		},
-		{Name: "Dummy Relay 2",
-			Type: "DummyRelay",
-			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Relay 2", Comment: "Dummy relay Name", Choice: ""},
-			},
-		},
-		{Name: "Dummy Relay 3",
-			Type: "DummyRelay",
-			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Relay 3", Comment: "Dummy relay Name", Choice: ""},
-			},
-		},
+		})
 	}
 	return relayDefined, nil
 }
