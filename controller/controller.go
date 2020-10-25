@@ -14,6 +14,7 @@ import (
 	"./control"
 )
 
+// HandleWebMessage recieves all messages coming from web UI and calls appropriate handlers
 func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
 
 	name := strings.ReplaceAll(msg.DeviceName, "_", " ")
@@ -48,12 +49,28 @@ func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
 	}
 }
 
-// OnHandleMessages called when idle to update any messages ect
+// OnHandleMessages called when HandleDevices() is idle to do any needed processing.
 func OnHandleMessages() {
 
 }
 
-func HandleDevices(sensors map[string]control.ISensor, actors map[string]control.IActor, chnSensor chan control.SensorMessage, sensValues SensorValues) {
+// HandleWebServer recieves all incoming messages from web server
+func HandleWebServer(sensorValues SensorValues, chnWebSvrIn server.SvrChanIn, logger *control.Logger) {
+	t := time.NewTicker(5000 * time.Millisecond)
+
+	for true {
+		select {
+		case in := <-chnWebSvrIn:
+			logger.LogMessage("Got message")
+			HandleWebMessage(in, sensorValues)
+		case <-t.C:
+			logger.LogMessage("tick")
+		}
+	}
+}
+
+// HandleDevices  listens on device channels like sensors and equipment to handle incomming messages.
+func HandleDevices(sensors map[string]control.ISensor, actors map[string]control.IActor, chnSensor chan control.SensorMessage, chnEquipment chan control.EquipMessage, sensValues SensorValues) {
 	t := time.NewTicker(5000 * time.Millisecond)
 	//state := true
 
@@ -65,28 +82,14 @@ func HandleDevices(sensors map[string]control.ISensor, actors map[string]control
 			sensValues[resvMsg.Name] = resvMsg.Value
 		case <-t.C:
 			OnHandleMessages()
-			/*
-				for _, act := range actors {
-					if state {
-						act.On()
-					} else {
-						act.Off()
-					}
-					//time.Sleep(time.Millisecond * 250)
-				}
-				if state {
-					state = false
-				} else {
-					state = true
-				}
-			*/
 		}
 	}
 }
 
-//RegDevices stores all sensor types that can be used.
+//RegDevices stores all device types that can be used.
 type RegDevices map[string]reflect.Type
 
+// SensorValues stores updated values from all registered sensors
 type SensorValues map[string]float64
 
 var actors map[string]control.IActor
@@ -168,21 +171,11 @@ func main() {
 		eq.OnStart()
 	}
 
-	go HandleDevices(sensors, actors, chnSensorValue, sensorValues)
+	go HandleDevices(sensors, actors, chnSensorValue, EqOut, sensorValues)
 
 	go server.RunWebServer(svrIn, svrOut)
 
-	t := time.NewTicker(5000 * time.Millisecond)
-
-	for true {
-		select {
-		case in := <-svrOut:
-			logger.LogMessage("Got message")
-			HandleWebMessage(in, sensorValues)
-		case <-t.C:
-			logger.LogMessage("tick")
-		}
-	}
+	go HandleWebServer(sensorValues, svrIn, &logger)
 }
 
 func toProperties(propsConfig []config.PropertyConfig) []control.Property {
