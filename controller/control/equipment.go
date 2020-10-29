@@ -2,6 +2,8 @@ package control
 
 import (
 	"time"
+
+	"../config"
 )
 
 // Equipment messages
@@ -87,6 +89,17 @@ func (eq *Equipment) InitEquipment(name string, logger *Logger, properties []Pro
 	}
 
 	return nil
+}
+
+func (eq *Equipment) GetDefaultsConfig() ([]config.PropertyConfig, error) {
+	return []config.PropertyConfig{
+		{Name: "Temp Sensor", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
+		{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
+		{Name: "Pump", Type: "string", Hidden: false, Value: "Relay 1", Comment: "Units for Sensor", Choice: ""},
+		{Name: "Circulator", Type: "string", Hidden: false, Value: "Relay 2", Comment: "Units for Sensor", Choice: ""},
+		{Name: "Heater", Type: "string", Hidden: false, Value: "SSR 1", Comment: "Units for Sensor", Choice: ""},
+	}, nil
+
 }
 
 func (eq *Equipment) isValidState(state int64) bool {

@@ -33,6 +33,14 @@ func (p *Properties) updatePropertyValue(name string, value interface{}) interfa
 
 func (p *Properties) InitProperty(name string, proptype string, value interface{}, comment string) interface{} {
 
+	if proptype == "bool" {
+		v := value.(string)
+		if v == "1" || v == "true" || v == "True" {
+			value = true
+		} else {
+			value = false
+		}
+	}
 	if _, present := (*p)[name]; !present {
 		p.AddProperty(name, proptype, value, comment)
 	} else {

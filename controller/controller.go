@@ -95,6 +95,7 @@ type SensorValues map[string]float64
 var actors map[string]control.IActor
 var sensors map[string]control.ISensor
 var equipment map[string]control.IEquipment
+var Buzzers map[string]control.IBuzzer
 
 func main() {
 
@@ -103,9 +104,13 @@ func main() {
 	svrOut := make(server.SvrChanOut)
 	EqIn := make(chan control.EquipMessage)
 	EqOut := make(chan control.EquipMessage)
+	chnAlive := make(chan int)
 
 	sensors = make(map[string]control.ISensor)
 	actors = make(map[string]control.IActor)
+	equipment = make(map[string]control.IEquipment)
+	Buzzers = make(map[string]control.IBuzzer)
+
 	sensorValues := make(SensorValues)
 
 	regDevices := RegDevices{
@@ -116,6 +121,7 @@ func main() {
 		"SimpleRelay":     reflect.TypeOf(control.SimpleRelay{}),
 		"SimpleSSR":       reflect.TypeOf(control.SimpleSSR{}),
 		"SimpleRIMM":      reflect.TypeOf(control.SimpleRIMM{}),
+		"ActiveBuzzer":    reflect.TypeOf(control.ActiveBuzzer{}),
 	}
 
 	fmt.Println("Starting Controller...")
@@ -171,11 +177,19 @@ func main() {
 		eq.OnStart()
 	}
 
+	buzzer := reflect.New(regDevices["ActiveBuzzer"]).Interface().(control.IBuzzer)
+	buzzer.Init("Main Buzzer", &logger, []control.Property{})
+	buzzer.OnStart()
+	buzzer.PlaySound("Main")
+	Buzzers["Main Buzzer"] = buzzer
+
 	go HandleDevices(sensors, actors, chnSensorValue, EqOut, sensorValues)
 
 	go server.RunWebServer(svrIn, svrOut)
 
 	go HandleWebServer(sensorValues, svrIn, &logger)
+
+	<-chnAlive
 }
 
 func toProperties(propsConfig []config.PropertyConfig) []control.Property {
