@@ -112,3 +112,31 @@ func (buz *ActiveBuzzer) PlaySoundBit(soundBits []SoundBit) error {
 
 	return nil
 }
+
+type DummyBuzzer struct {
+	Buzzer
+}
+
+func (buz *DummyBuzzer) Init(name string, logger *Logger, properties []Property) error {
+	properties = append(properties, CreateDummyProp())
+
+	buz.Device.Init(name, logger, properties)
+	return nil
+}
+
+func (buz *DummyBuzzer) On() error {
+	return nil
+}
+
+func (buz *DummyBuzzer) Off() error {
+	return nil
+}
+
+func (buz *DummyBuzzer) PlaySound(name string) error {
+	return nil
+}
+
+func (buz *DummyBuzzer) PlaySoundBit(soundBits []SoundBit) error {
+	buz.LogMessage("Play Sound it")
+	return nil
+}

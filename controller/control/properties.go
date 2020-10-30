@@ -101,3 +101,15 @@ func (p *Properties) GetPropertyComment(name string) (interface{}, bool) {
 func NewProperties() Properties {
 	return Properties{}
 }
+
+// CreateDummyProp creates a property for dummy device to be true
+func CreateDummyProp() Property {
+	return Property{
+		Name:     "Dummy",
+		PropType: "bool",
+		Hidden:   false,
+		Choice:   "",
+		Value:    "true",
+		Comment:  "Is dummy device",
+	}
+}

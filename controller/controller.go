@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/xml"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
@@ -95,10 +98,16 @@ type SensorValues map[string]float64
 var actors map[string]control.IActor
 var sensors map[string]control.ISensor
 var equipment map[string]control.IEquipment
-var Buzzers map[string]control.IBuzzer
+var buzzers map[string]control.IBuzzer
 
 func main() {
 
+	flgDummy := flag.Bool("dummy", false, "Use dummy configuration")
+	flgConfig := flag.String("config", "configuration.xml", "XML configuration file to load")
+	flag.Parse()
+	if *flgDummy == true {
+		fmt.Println("Dummy Configutation used")
+	}
 	chnSensorValue := make(chan control.SensorMessage)
 	svrIn := make(server.SvrChanIn)
 	svrOut := make(server.SvrChanOut)
@@ -109,7 +118,7 @@ func main() {
 	sensors = make(map[string]control.ISensor)
 	actors = make(map[string]control.IActor)
 	equipment = make(map[string]control.IEquipment)
-	Buzzers = make(map[string]control.IBuzzer)
+	buzzers = make(map[string]control.IBuzzer)
 
 	sensorValues := make(SensorValues)
 
@@ -122,6 +131,7 @@ func main() {
 		"SimpleSSR":       reflect.TypeOf(control.SimpleSSR{}),
 		"SimpleRIMM":      reflect.TypeOf(control.SimpleRIMM{}),
 		"ActiveBuzzer":    reflect.TypeOf(control.ActiveBuzzer{}),
+		"DummyBuzzer":     reflect.TypeOf(control.DummyBuzzer{}),
 	}
 
 	fmt.Println("Starting Controller...")
@@ -130,14 +140,23 @@ func main() {
 	logger.Init()
 	logger.SetDebug(true)
 	logger.Add("default", control.LogLevelAll, os.Stdout)
-	availableLinknetAddresses, _ := control.GetActiveNetlinkAddresses(&logger)
+
+	var availableLinknetAddresses []uint64
+	if !(*flgDummy) {
+		availableLinknetAddresses, _ = control.GetActiveNetlinkAddresses(&logger)
+	}
 
 	rels := []string{"GPIO21", "GPIO20"}
 	ssrs := []string{"GPIO16"}
-	defaultConfiguration, conErr := config.DefaultConfiguration(availableLinknetAddresses, rels, ssrs, false)
+	defaultConfiguration, conErr := config.DefaultConfiguration(availableLinknetAddresses, rels, ssrs, *flgDummy)
 	if conErr != nil {
 		logger.LogMessage("Unable to create default configuration::%s", conErr.Error())
 	}
+
+	//buf, err := ioutil.ReadFile(*flgConfig)
+	configFile, _ := xml.MarshalIndent(defaultConfiguration, "", "   ")
+	//fmt.Println(string(configFile))
+	ioutil.WriteFile(*flgConfig, configFile, 0644)
 
 	for _, sensor := range defaultConfiguration.Sensors {
 		if _, ok := regDevices[sensor.Type]; ok {
@@ -181,7 +200,7 @@ func main() {
 	buzzer.Init("Main Buzzer", &logger, []control.Property{})
 	buzzer.OnStart()
 	buzzer.PlaySound("Main")
-	Buzzers["Main Buzzer"] = buzzer
+	buzzers["Main Buzzer"] = buzzer
 
 	go HandleDevices(sensors, actors, chnSensorValue, EqOut, sensorValues)
 

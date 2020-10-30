@@ -131,23 +131,31 @@ func DefaultSensorConfig(adrs []uint64, dummy bool) ([]SensorConfig, error) {
 	return sensorsDefined, nil
 }
 
+// DefaultConfiguration Creates a default configuration object
 func DefaultConfiguration(adrs []uint64, relayGPIO []string, ssrGPIO []string, dummy bool) (BrewController, error) {
 	brewController := BrewController{}
 	var err error
 	brewController.Sensors, err = DefaultSensorConfig(adrs, dummy)
-	brewController.Actors, err = DefaultRelayConfig(relayGPIO, ssrGPIO)
+	brewController.Actors, err = DefaultRelayConfig(relayGPIO, ssrGPIO, dummy)
 	brewController.Equipment, err = DefaultEquipment(dummy)
 	return brewController, err
 }
 
 // DefaultRelayConfig is temp code to return initial relay devices for demo
-func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string) ([]ActorsConfig, error) {
+func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]ActorsConfig, error) {
 	relayDefined := []ActorsConfig{}
 
+	relayType := "SimpleRelay"
+	ssType := "SimpleSSR"
+	if dummy {
+		relayType = "DummyRelay"
+		ssType = "DummyRelay"
+	}
+
 	for indx, rel := range relayGPIO {
-		name := fmt.Sprint("Relay %d", indx+1)
+		name := fmt.Sprintf("Relay %d", indx+1)
 		relayDefined = append(relayDefined, ActorsConfig{Name: name,
-			Type: "SimpleRelay",
+			Type: relayType,
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "relay Name", Choice: ""},
 				{Name: "GPIO", Type: "string", Hidden: false, Value: rel, Comment: "GPIO by name", Choice: ""},
@@ -155,9 +163,9 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string) ([]ActorsConfig, e
 		})
 	}
 	for indx, ssrs := range ssrGPIO {
-		name := fmt.Sprint("SSR %d", indx+1)
+		name := fmt.Sprintf("SSR %d", indx+1)
 		relayDefined = append(relayDefined, ActorsConfig{Name: name,
-			Type: "SimpleSSR",
+			Type: ssType,
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "SSR Name", Choice: ""},
 				{Name: "GPIO", Type: "string", Hidden: false, Value: ssrs, Comment: "GPIO by name", Choice: ""},
@@ -165,7 +173,7 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string) ([]ActorsConfig, e
 		})
 	}
 	for indx := 1; indx <= 4; indx++ {
-		name := fmt.Sprint("Dummy Relay %d", indx)
+		name := fmt.Sprintf("Dummy Relay %d", indx)
 		relayDefined = append(relayDefined, ActorsConfig{Name: name,
 			Type: "DummyRelay",
 			Properties: []PropertyConfig{
