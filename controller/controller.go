@@ -42,7 +42,7 @@ func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
 		}
 	case server.CmdGetSensorValue:
 		if sensor, ok := sensValues[name]; ok {
-			val := fmt.Sprintf("%.4f", sensor)
+			val := fmt.Sprintf("%.2f", sensor)
 			msg.ChanReturn <- val
 		} else {
 			msg.ChanReturn <- "bad"
@@ -58,12 +58,12 @@ func OnHandleMessages() {
 }
 
 // HandleWebServer recieves all incoming messages from web server
-func HandleWebServer(sensorValues SensorValues, chnWebSvrIn server.SvrChanIn, logger *control.Logger) {
+func HandleWebServer(sensorValues SensorValues, chnWebSvrOut server.SvrChanOut, logger *control.Logger) {
 	t := time.NewTicker(5000 * time.Millisecond)
 
 	for true {
 		select {
-		case in := <-chnWebSvrIn:
+		case in := <-chnWebSvrOut:
 			logger.LogMessage("Got message")
 			HandleWebMessage(in, sensorValues)
 		case <-t.C:
@@ -196,17 +196,26 @@ func main() {
 		eq.OnStart()
 	}
 
-	buzzer := reflect.New(regDevices["ActiveBuzzer"]).Interface().(control.IBuzzer)
-	buzzer.Init("Main Buzzer", &logger, []control.Property{})
-	buzzer.OnStart()
-	buzzer.PlaySound("Main")
-	buzzers["Main Buzzer"] = buzzer
+	for _, buz := range defaultConfiguration.Buzzers {
+
+		if _, ok := regDevices[buz.Type]; ok {
+			t1 := reflect.New(regDevices[buz.Type]).Interface().(control.IBuzzer)
+			t1.Init(buz.Name, &logger, toProperties(buz.Properties))
+			buzzers[buz.Name] = t1
+		}
+	}
+
+	for _, buzzs := range buzzers {
+		buzzs.OnStart()
+	}
+
+	buzzers["Main Buzzer"].PlaySound("Main")
 
 	go HandleDevices(sensors, actors, chnSensorValue, EqOut, sensorValues)
 
 	go server.RunWebServer(svrIn, svrOut)
 
-	go HandleWebServer(sensorValues, svrIn, &logger)
+	go HandleWebServer(sensorValues, svrOut, &logger)
 
 	<-chnAlive
 }

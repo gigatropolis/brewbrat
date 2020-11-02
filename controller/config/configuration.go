@@ -12,6 +12,7 @@ type BrewController struct {
 	XMLName    xml.Name          `xml:"controller"`
 	Name       string            `xml:"name"`
 	Version    string            `xml:"version"`
+	Buzzers    []BuzzerConfig    `xml:"buzzers>buzzer"`
 	Equipment  []EquipmentConfig `xml:"equipment>equip"`
 	Sensors    []SensorConfig    `xml:"sensors>sensor"`
 	Actors     []ActorsConfig    `xml:"actors>actor"`
@@ -38,6 +39,14 @@ type SensorConfig struct {
 // ActorsConfig is type of relay or any on/off device
 type ActorsConfig struct {
 	XMLName    xml.Name         `xml:"actor"`
+	Name       string           `xml:"name"`
+	Type       string           `xml:"type"`
+	Properties []PropertyConfig `xml:"properties>property"`
+}
+
+// BuzzerConfig is a buzzer device
+type BuzzerConfig struct {
+	XMLName    xml.Name         `xml:"buzzer"`
 	Name       string           `xml:"name"`
 	Type       string           `xml:"type"`
 	Properties []PropertyConfig `xml:"properties>property"`
@@ -93,12 +102,12 @@ func DefaultSensorConfig(adrs []uint64, dummy bool) ([]SensorConfig, error) {
 
 	if dummy {
 		for i := 1; i <= 3; i++ {
-			sNum := strconv.FormatInt(1, 10)
+			sNum := strconv.FormatInt(int64(i), 10)
 			sensorsDefined = append(sensorsDefined, SensorConfig{
-				Name: "Dummy Temp " + sNum,
+				Name: "temp Sensor " + sNum,
 				Type: "DummyTempSensor",
 				Properties: []PropertyConfig{
-					{Name: "Name", Type: "string", Hidden: false, Value: "Dummy Temp " + sNum, Comment: "Sensor Name", Choice: ""},
+					{Name: "Name", Type: "string", Hidden: false, Value: "temp Sensor " + sNum, Comment: "Sensor Name", Choice: ""},
 					{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
 			})
 		}
@@ -135,6 +144,7 @@ func DefaultSensorConfig(adrs []uint64, dummy bool) ([]SensorConfig, error) {
 func DefaultConfiguration(adrs []uint64, relayGPIO []string, ssrGPIO []string, dummy bool) (BrewController, error) {
 	brewController := BrewController{}
 	var err error
+	brewController.Buzzers, err = DefaultBuzzerConfig(dummy)
 	brewController.Sensors, err = DefaultSensorConfig(adrs, dummy)
 	brewController.Actors, err = DefaultRelayConfig(relayGPIO, ssrGPIO, dummy)
 	brewController.Equipment, err = DefaultEquipment(dummy)
@@ -164,7 +174,8 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]Act
 	}
 	for indx, ssrs := range ssrGPIO {
 		name := fmt.Sprintf("SSR %d", indx+1)
-		relayDefined = append(relayDefined, ActorsConfig{Name: name,
+		relayDefined = append(relayDefined, ActorsConfig{
+			Name: name,
 			Type: ssType,
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "SSR Name", Choice: ""},
@@ -174,7 +185,8 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]Act
 	}
 	for indx := 1; indx <= 4; indx++ {
 		name := fmt.Sprintf("Dummy Relay %d", indx)
-		relayDefined = append(relayDefined, ActorsConfig{Name: name,
+		relayDefined = append(relayDefined, ActorsConfig{
+			Name: name,
 			Type: "DummyRelay",
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "Dummy relay Name", Choice: ""},
@@ -182,4 +194,25 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]Act
 		})
 	}
 	return relayDefined, nil
+}
+
+// DefaultBuzzerConfig is temp code to return initial buzzer device for demo
+func DefaultBuzzerConfig(dummy bool) ([]BuzzerConfig, error) {
+	buzzerDefined := []BuzzerConfig{}
+
+	buzzerType := "ActiveBuzzer"
+	if dummy {
+		buzzerType = "DummyBuzzer"
+	}
+
+	name := "Main Buzzer"
+	buzzerDefined = append(buzzerDefined, BuzzerConfig{
+		Name: name,
+		Type: buzzerType,
+		Properties: []PropertyConfig{
+			{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "Buzzer Name", Choice: ""},
+		},
+	})
+
+	return buzzerDefined, nil
 }

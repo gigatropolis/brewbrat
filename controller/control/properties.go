@@ -109,7 +109,7 @@ func CreateDummyProp() Property {
 		PropType: "bool",
 		Hidden:   false,
 		Choice:   "",
-		Value:    "true",
+		Value:    true,
 		Comment:  "Is dummy device",
 	}
 }

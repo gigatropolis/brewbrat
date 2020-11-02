@@ -124,6 +124,21 @@ func (buz *DummyBuzzer) Init(name string, logger *Logger, properties []Property)
 	return nil
 }
 
+func (buz *DummyBuzzer) GetDefaultsConfig() ([]config.PropertyConfig, error) {
+	return []config.PropertyConfig{
+		{Name: "Name", Type: "string", Hidden: true, Value: "Main Buzzer", Comment: "Buzzer Name", Choice: ""},
+	}, nil
+
+}
+
+func (buz *DummyBuzzer) OnStart() error {
+	return nil
+}
+
+func (buz *DummyBuzzer) OnStop() error {
+	return nil
+}
+
 func (buz *DummyBuzzer) On() error {
 	return nil
 }
