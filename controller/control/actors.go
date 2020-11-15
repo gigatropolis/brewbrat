@@ -19,6 +19,7 @@ type IActor interface {
 	Off() error
 	SetPower(power int) error
 	GetState() DeviceState
+	GetPowerLevel() int
 }
 
 const (
@@ -65,6 +66,10 @@ func (act *Actor) Off() error {
 func (act *Actor) SetPower(power int) error {
 	act.power = power
 	return nil
+}
+
+func (act *Actor) GetPowerLevel() int {
+	return act.power
 }
 
 func (act *Actor) GetState() DeviceState {

@@ -73,19 +73,65 @@ func HandleWebServer(sensorValues SensorValues, chnWebSvrOut server.SvrChanOut, 
 }
 
 // HandleDevices  listens on device channels like sensors and equipment to handle incomming messages.
-func HandleDevices(sensors map[string]control.ISensor, actors map[string]control.IActor, chnSensor chan control.SensorMessage, chnEquipment chan control.EquipMessage, sensValues SensorValues) {
-	t := time.NewTicker(5000 * time.Millisecond)
+func HandleDevices(sensors map[string]control.ISensor, actors map[string]control.IActor, equipment map[string]control.IEquipment, chnSensor chan control.SensorMessage, chnEquipIn chan control.EquipMessage, chnEquipOut chan control.EquipMessage, sensValues SensorValues) {
+	t := time.NewTicker(3000 * time.Millisecond)
 	//state := true
+	needUpdateSensors := false
+	needUpdateActors := false
 
 	for true {
+		needUpdateSensors = false
+		needUpdateActors = false
+
 		select {
 		case resvMsg := <-chnSensor:
 			name := resvMsg.Name
 			fmt.Printf("Recieved from '%s': Value %.3f%s\n", name, resvMsg.Value, sensors[name].GetUnits())
 			sensValues[resvMsg.Name] = resvMsg.Value
+			needUpdateSensors = true
+		case eqMesg := <-chnEquipOut:
+			fmt.Printf("Recieved from Equipment")
+			switch eqMesg.Cmd {
+			case control.CmdSendNotification:
+				sensor, ok := sensors[eqMesg.DeviceName]
+				if ok {
+					sensor.SendNotification(eqMesg.StrParam1)
+				}
+			case control.CmdActorOn:
+				if relay, ok := actors[eqMesg.DeviceName]; ok {
+					relay.On()
+					needUpdateActors = true
+				}
+			case control.CmdActorOff:
+				if relay, ok := actors[eqMesg.DeviceName]; ok {
+					relay.Off()
+					needUpdateActors = true
+				}
+			}
 		case <-t.C:
 			OnHandleMessages()
 		}
+
+		if needUpdateActors || needUpdateSensors {
+			for _, eq := range equipment {
+				sens := []control.SensValue{}
+				acts := []control.ActValue{}
+				if needUpdateSensors {
+					for name, senVal := range sensValues {
+						fmt.Printf("senVal %0.2f\n", senVal)
+						sens = append(sens, control.SensValue{Name: name, Value: senVal})
+					}
+				}
+				if needUpdateActors {
+					for _, act := range actors {
+						acts = append(acts, control.ActValue{Name: act.Name(), State: act.GetState(), Power: act.GetPowerLevel()})
+					}
+
+				}
+				chnEquipIn <- control.EquipMessage{Name: eq.Name(), Cmd: control.CmdUpdateDevices, Sensors: sens, Actors: acts}
+			}
+		}
+
 	}
 }
 
@@ -194,6 +240,7 @@ func main() {
 
 	for _, eq := range equipment {
 		eq.OnStart()
+		go eq.Run()
 	}
 
 	for _, buz := range defaultConfiguration.Buzzers {
@@ -211,7 +258,7 @@ func main() {
 
 	buzzers["Main Buzzer"].PlaySound("Main")
 
-	go HandleDevices(sensors, actors, chnSensorValue, EqOut, sensorValues)
+	go HandleDevices(sensors, actors, equipment, chnSensorValue, EqIn, EqOut, sensorValues)
 
 	go server.RunWebServer(svrIn, svrOut)
 

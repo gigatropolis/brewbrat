@@ -255,7 +255,7 @@ func (sen *DummyTempSensor) OnStart() error {
 	sen.offset = 0.1
 
 	sen.cnt = 0
-	sen.direction = 1
+	sen.direction = -1
 	sen.minTemp = sen.temp
 
 	sen.prevState = "OFF"
@@ -265,22 +265,30 @@ func (sen *DummyTempSensor) OnStart() error {
 
 func (sen *DummyTempSensor) OnRead() (float64, error) {
 
-	temp := sen.temp
-
 	sen.temp += sen.change
-	if sen.cnt > 10 {
+	if sen.cnt > 3 {
 		sen.change += (sen.offset * sen.direction)
 		sen.cnt = 0
 	}
+	temp := sen.temp
 
 	if temp > sen.MaxTemp+1 {
 		temp = sen.MaxTemp
+	} else if temp < sen.minTemp {
+		temp = sen.minTemp
 	} else if sen.prevState != sen.state {
+		if sen.state == "ON" {
+			sen.LogMessage("%s state to '%s'", sen.Name, sen.state)
+			sen.direction = 1
+		} else {
+			sen.direction = -1
+		}
 		sen.prevState = sen.state
-		sen.direction = -sen.direction
 		sen.change = 0.1 * sen.direction
 	}
 	sen.cnt++
+	sen.temp = temp
+
 	return temp, nil
 }
 

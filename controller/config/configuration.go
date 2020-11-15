@@ -73,7 +73,7 @@ func DefaultEquipment(dummy bool) ([]EquipmentConfig, error) {
 			Name: "Dummy Equipment 1",
 			Type: "SimpleRIMM",
 			Properties: []PropertyConfig{
-				{Name: "Temp Sensor", Type: "string", Hidden: false, Value: "Temp Sensor 1", Comment: "Sensor Name", Choice: ""},
+				{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Temp Sensor 1", Comment: "Sensor Name", Choice: ""},
 				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
 				{Name: "Pump", Type: "string", Hidden: false, Value: "Dummy Relay 1", Comment: "Units for Sensor", Choice: ""},
 				{Name: "Circulator", Type: "string", Hidden: false, Value: "Dummy Relay 2", Comment: "Units for Sensor", Choice: ""},
@@ -85,7 +85,7 @@ func DefaultEquipment(dummy bool) ([]EquipmentConfig, error) {
 			Name: "Equipment 1",
 			Type: "SimpleRIMM",
 			Properties: []PropertyConfig{
-				{Name: "Temp Sensor", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
+				{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
 				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
 				{Name: "Pump", Type: "string", Hidden: false, Value: "Relay 1", Comment: "Units for Sensor", Choice: ""},
 				{Name: "Circulator", Type: "string", Hidden: false, Value: "Relay 2", Comment: "Units for Sensor", Choice: ""},

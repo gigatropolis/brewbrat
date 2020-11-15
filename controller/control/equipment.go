@@ -9,10 +9,12 @@ import (
 // Equipment messages
 const (
 	CmdUpdateDevices = iota + 1
+	CmdUpdateSensor
 	CmdChangeState
 	CmdActorOn
 	CmdActorOff
 	CmdActorChange
+	CmdSendNotification
 )
 
 const (
@@ -36,6 +38,7 @@ type ActValue struct {
 }
 
 type EquipMessage struct {
+	Name       string
 	DeviceName string
 	Cmd        int
 	FltParam1  float64
@@ -93,7 +96,7 @@ func (eq *Equipment) InitEquipment(name string, logger *Logger, properties []Pro
 
 func (eq *Equipment) GetDefaultsConfig() ([]config.PropertyConfig, error) {
 	return []config.PropertyConfig{
-		{Name: "Temp Sensor", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
+		{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
 		{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
 		{Name: "Pump", Type: "string", Hidden: false, Value: "Relay 1", Comment: "Units for Sensor", Choice: ""},
 		{Name: "Circulator", Type: "string", Hidden: false, Value: "Relay 2", Comment: "Units for Sensor", Choice: ""},
@@ -111,10 +114,12 @@ func (eq *Equipment) isValidState(state int64) bool {
 }
 
 func (eq *Equipment) AddSensor(name string) error {
+	eq.LogMessage("eq.AddSensor %s", name)
 	eq.Sensors[name] = SensValue{Name: name}
 	return nil
 }
 func (eq *Equipment) AddActor(name string) error {
+	eq.LogMessage("eq.AddActor %s", name)
 	eq.Actors[name] = ActValue{Name: name}
 	return nil
 }
@@ -126,25 +131,42 @@ func (eq *Equipment) readMessages() error {
 	case inMessage := <-eq.in:
 		eq.handleMessage(inMessage)
 	case <-tWait.C:
-	default:
 	}
 	return err
 }
 
 func (eq *Equipment) handleMessage(message EquipMessage) error {
-
+	eq.LogMessage("eq.handleMessage %d", message.Cmd)
 	switch message.Cmd {
 	case CmdUpdateDevices:
 		for _, sensor := range message.Sensors {
-			s := eq.Sensors[sensor.Name]
-			s.Value = sensor.Value
-			eq.Sensors[sensor.Name] = s
+			eq.LogMessage("start CmdUpdateDevices: eq.handleMessage %s", sensor.Name)
+			s, ok := eq.Sensors[sensor.Name]
+			if ok {
+				eq.LogMessage("sensor.Name: eq.handleMessage %s", sensor.Name)
+				s.Value = sensor.Value
+				eq.Sensors[sensor.Name] = s
+			}
 		}
 		for _, actor := range message.Actors {
-			a := eq.Actors[actor.Name]
-			a.State = actor.State
-			a.Power = actor.Power
-			eq.Actors[actor.Name] = a
+			a, ok := eq.Actors[actor.Name]
+			if ok {
+				if a.State != actor.State && actor.Name == "Dummy Relay 3" {
+					cmd := "OFF"
+					if actor.State == StateOn {
+						cmd = "ON"
+					}
+					name := "Temp Sensor 1"
+					if eq.IsDummyDevice() {
+						name = "Dummy Temp 1"
+					}
+					eq.LogMessage("Actor out %s", actor.Name)
+					eq.out <- EquipMessage{DeviceName: name, Cmd: CmdSendNotification, StrParam1: cmd}
+				}
+				a.State = actor.State
+				a.Power = actor.Power
+				eq.Actors[actor.Name] = a
+			}
 		}
 	case CmdChangeState:
 		if eq.isValidState(message.IntParam1) {
@@ -154,18 +176,10 @@ func (eq *Equipment) handleMessage(message EquipMessage) error {
 	return nil
 }
 
-// Run will handle reading in channel and setting values for sensors and actors
-func (eq *Equipment) Run() error {
+// OnStart called once when device first started up. Called after Init()
+func (eq *Equipment) OnStart() error {
 
-	for true {
-		eq.readMessages()
-		eq.NextStep()
-		//time.Sleep(time.Second * 3)
-	}
-	return nil
-}
-
-func (eq *Equipment) NextStep() error {
+	eq.State = EqStateActive
 	return nil
 }
 
@@ -189,10 +203,27 @@ func (rim *SimpleRIMM) InitEquipment(name string, logger *Logger, properties []P
 	rim.HeaterName = props.InitProperty("Pump Name", "string", "Dummy Relay 1", "Name of actor used to control Heater").(string)
 	rim.PumpName = props.InitProperty("Heater Name", "string", "Dummy Relay 2", "Name of actor used to control Pump").(string)
 	rim.AgitatorName = props.InitProperty("Agitator Name", "string", "Dummy Relay 3", "Name of actor used to for agitation").(string)
+
+	rim.AddSensor(rim.TempProbeName)
+	rim.AddActor(rim.HeaterName)
+	rim.AddActor(rim.PumpName)
+	rim.AddActor(rim.AgitatorName)
+	return nil
+}
+
+// Run will handle reading in channel and setting values for sensors and actors
+func (rim *SimpleRIMM) Run() error {
+
+	for true {
+		rim.readMessages()
+		rim.NextStep()
+		//time.Sleep(time.Second * 3)
+	}
 	return nil
 }
 
 func (rim *SimpleRIMM) NextStep() error {
+	rim.LogMessage("rim.NextStep")
 
 	switch rim.State {
 	case EqStateActive:
@@ -202,6 +233,8 @@ func (rim *SimpleRIMM) NextStep() error {
 }
 
 func (rim *SimpleRIMM) updateActors() error {
+	rim.LogMessage("rim.updateActors")
+
 	var err error = nil
 	switch rim.Mode {
 	case EqModeHistorisis:
@@ -215,10 +248,10 @@ func (rim *SimpleRIMM) updateActors() error {
 func (rim *SimpleRIMM) updateHistorisis() error {
 
 	temp, ok := rim.Sensors[rim.TempProbeName]
+	rim.LogMessage("temp.Value %0.2f", temp.Value)
 	if !ok {
 		return nil
 	}
-
 	if int(temp.Value) > rim.PowerOff {
 		if _, ok = rim.Actors[rim.HeaterName]; ok {
 			rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOff}
