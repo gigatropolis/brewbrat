@@ -127,10 +127,14 @@ func (eq *Equipment) AddActor(name string) error {
 func (eq *Equipment) readMessages() error {
 	var err error = nil
 	tWait := time.NewTimer(time.Millisecond * 4000)
-	select {
-	case inMessage := <-eq.in:
-		eq.handleMessage(inMessage)
-	case <-tWait.C:
+	readMessages := true
+	for readMessages {
+		select {
+		case inMessage := <-eq.in:
+			eq.handleMessage(inMessage)
+		case <-tWait.C:
+			readMessages = false
+		}
 	}
 	return err
 }
@@ -151,7 +155,7 @@ func (eq *Equipment) handleMessage(message EquipMessage) error {
 		for _, actor := range message.Actors {
 			a, ok := eq.Actors[actor.Name]
 			if ok {
-				if a.State != actor.State && actor.Name == "Dummy Relay 3" {
+				if a.State != actor.State && actor.Name == "Dummy Relay 1" {
 					cmd := "OFF"
 					if actor.State == StateOn {
 						cmd = "ON"
@@ -199,7 +203,7 @@ func (rim *SimpleRIMM) InitEquipment(name string, logger *Logger, properties []P
 	props := rim.GetProperties()
 	rim.PowerOn = props.InitProperty("Power On", "int", 147, "Power goes on if temperature drops below this value").(int)
 	rim.PowerOff = props.InitProperty("Power Off", "int", 150, "Power goes Off if temperature goes above this value").(int)
-	rim.TempProbeName = props.InitProperty("Temperature Sensor", "string", "Dummy Temp 1", "Name of Temperature Sensor").(string)
+	rim.TempProbeName = props.InitProperty("Temperature Sensor", "string", "Temp Sensor 1", "Name of Temperature Sensor").(string)
 	rim.HeaterName = props.InitProperty("Pump Name", "string", "Dummy Relay 1", "Name of actor used to control Heater").(string)
 	rim.PumpName = props.InitProperty("Heater Name", "string", "Dummy Relay 2", "Name of actor used to control Pump").(string)
 	rim.AgitatorName = props.InitProperty("Agitator Name", "string", "Dummy Relay 3", "Name of actor used to for agitation").(string)
@@ -253,13 +257,17 @@ func (rim *SimpleRIMM) updateHistorisis() error {
 		return nil
 	}
 	if int(temp.Value) > rim.PowerOff {
-		if _, ok = rim.Actors[rim.HeaterName]; ok {
-			rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOff}
+		if act, ok := rim.Actors[rim.HeaterName]; ok {
+			if act.State != StateOff {
+				rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOff}
+			}
 		}
 	}
 	if int(temp.Value) < rim.PowerOn {
-		if _, ok = rim.Actors[rim.HeaterName]; ok {
-			rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOn}
+		if act, ok := rim.Actors[rim.HeaterName]; ok {
+			if act.State != StateOn {
+				rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOn}
+			}
 		}
 	}
 	return nil

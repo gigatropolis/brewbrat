@@ -238,6 +238,7 @@ func (sen *DummyTempSensor) GetDefaultsConfig() ([]config.PropertyConfig, error)
 }
 
 func (sen *DummyTempSensor) SendNotification(notify string) error {
+	sen.LogMessage("set sen.state = %s", notify)
 	sen.state = notify
 	return nil
 }
@@ -256,7 +257,7 @@ func (sen *DummyTempSensor) OnStart() error {
 
 	sen.cnt = 0
 	sen.direction = -1
-	sen.minTemp = sen.temp
+	sen.minTemp = sen.temp - 10
 
 	sen.prevState = "OFF"
 	sen.state = "OFF"
@@ -265,7 +266,7 @@ func (sen *DummyTempSensor) OnStart() error {
 
 func (sen *DummyTempSensor) OnRead() (float64, error) {
 
-	sen.temp += sen.change
+	sen.temp += sen.change * sen.direction
 	if sen.cnt > 3 {
 		sen.change += (sen.offset * sen.direction)
 		sen.cnt = 0
@@ -277,8 +278,9 @@ func (sen *DummyTempSensor) OnRead() (float64, error) {
 	} else if temp < sen.minTemp {
 		temp = sen.minTemp
 	} else if sen.prevState != sen.state {
+		sen.LogMessage("%s != %s", sen.prevState, sen.state)
 		if sen.state == "ON" {
-			sen.LogMessage("%s state to '%s'", sen.Name, sen.state)
+			sen.LogMessage("%s state to '%s'", sen.Name(), sen.state)
 			sen.direction = 1
 		} else {
 			sen.direction = -1

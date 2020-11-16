@@ -90,7 +90,7 @@ func HandleDevices(sensors map[string]control.ISensor, actors map[string]control
 			sensValues[resvMsg.Name] = resvMsg.Value
 			needUpdateSensors = true
 		case eqMesg := <-chnEquipOut:
-			fmt.Printf("Recieved from Equipment")
+			fmt.Printf("Recieved from Equipment\n")
 			switch eqMesg.Cmd {
 			case control.CmdSendNotification:
 				sensor, ok := sensors[eqMesg.DeviceName]
@@ -118,7 +118,7 @@ func HandleDevices(sensors map[string]control.ISensor, actors map[string]control
 				acts := []control.ActValue{}
 				if needUpdateSensors {
 					for name, senVal := range sensValues {
-						fmt.Printf("senVal %0.2f\n", senVal)
+						fmt.Printf("senVal '%s' %0.2f\n", name, senVal)
 						sens = append(sens, control.SensValue{Name: name, Value: senVal})
 					}
 				}
@@ -154,11 +154,11 @@ func main() {
 	if *flgDummy == true {
 		fmt.Println("Dummy Configutation used")
 	}
-	chnSensorValue := make(chan control.SensorMessage)
+	chnSensorValue := make(chan control.SensorMessage, 4)
 	svrIn := make(server.SvrChanIn)
 	svrOut := make(server.SvrChanOut)
-	EqIn := make(chan control.EquipMessage)
-	EqOut := make(chan control.EquipMessage)
+	EqIn := make(chan control.EquipMessage, 4)
+	EqOut := make(chan control.EquipMessage, 4)
 	chnAlive := make(chan int)
 
 	sensors = make(map[string]control.ISensor)
