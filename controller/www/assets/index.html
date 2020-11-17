@@ -26,10 +26,29 @@
     </head>
     <link rel="stylesheet" href="common.css" type="text/css" />
     <style>
-        .sensor {
+
+.equipment > div {
+    background: #000;
+  border: 1px solid rgb(199, 243, 5);
+  float: none;
+  font-size: 24px;
+  font-weight: bold;
+  color: rgb(225, 250, 3);
+  margin-right: -1px;
+    margin-top: -1px;
+    padding: 10;
+
+}
+
+.equipment {
+    display: grid;
+    grid-template-columns: 100px 100px 100px;
+
+}
+.sensor {
   background: #000;
   border: 1px solid rgb(199, 243, 5);
-  float: left;
+  float: none;
   font-size: 24px;
   font-weight: bold;
   color: rgb(225, 250, 3);
@@ -41,6 +60,7 @@
   text-align: left;
   width: 80px;
 }
+
 body {
   font: 14px "Century Gothic", Futura, sans-serif;
   margin: 20px;
@@ -49,10 +69,10 @@ body {
 
     </style>
     <body>
-        <div>
-            <span id="temp_Sensor_1" class="sensor">xxx</span>
-            <span id="temp_Sensor_2" class="sensor">xxx</span>
-            <span id="temp_Sensor_3" class="sensor">xxx</span>
+        <div class="equipment">
+            <div id="Temp_Sensor_1" class="sensor1">xxx</div>
+            <div id="Temp_Sensor_2" class="sensor2">xxx</div>
+            <div id="Temp_Sensor_3" class="sensor3">xxx</div>
         </div>
         <div>
          <input id="button" type="submit" name="Relay 1" value="Relay ON" onclick="actorOn(relayName, relayValue)"/>

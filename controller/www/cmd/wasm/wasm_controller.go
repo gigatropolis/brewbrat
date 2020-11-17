@@ -151,7 +151,7 @@ func main() {
 	js.Global().Set("formatJSON", jsonWrapper())
 	js.Global().Set("UpdateRelayValue", postActorWapper())
 	//js.Global().Set("postSensorUpdate", postSensorUpdateWapper())
-	sensors := []string{"temp_Sensor_1", "temp_Sensor_2", "temp_Sensor_3"}
+	sensors := []string{"Temp_Sensor_1", "Temp_Sensor_2", "Temp_Sensor_3"}
 
 	//<-make(chan bool)
 	t := time.NewTicker(5000 * time.Millisecond)

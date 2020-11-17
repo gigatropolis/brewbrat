@@ -140,14 +140,14 @@ func (eq *Equipment) readMessages() error {
 }
 
 func (eq *Equipment) handleMessage(message EquipMessage) error {
-	eq.LogMessage("eq.handleMessage %d", message.Cmd)
+	//eq.LogMessage("eq.handleMessage %d", message.Cmd)
 	switch message.Cmd {
 	case CmdUpdateDevices:
 		for _, sensor := range message.Sensors {
-			eq.LogMessage("start CmdUpdateDevices: eq.handleMessage %s", sensor.Name)
+			//eq.LogMessage("start CmdUpdateDevices: eq.handleMessage %s", sensor.Name)
 			s, ok := eq.Sensors[sensor.Name]
 			if ok {
-				eq.LogMessage("sensor.Name: eq.handleMessage %s", sensor.Name)
+				//eq.LogMessage("sensor.Name: eq.handleMessage %s", sensor.Name)
 				s.Value = sensor.Value
 				eq.Sensors[sensor.Name] = s
 			}
