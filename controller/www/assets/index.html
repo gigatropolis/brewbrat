@@ -21,6 +21,9 @@
             }
 
             var relayValue = "ON"
+            var relayValue1 = "ON"
+            var relayValue2 = "ON"
+            var relayValue3 = "ON"
             var relayName = "Relay 1"
         </script>
     </head>
@@ -70,9 +73,15 @@ body {
     </style>
     <body>
         <div class="equipment">
-            <div id="Temp_Sensor_1" class="sensor1">xxx</div>
-            <div id="Temp_Sensor_2" class="sensor2">xxx</div>
-            <div id="Temp_Sensor_3" class="sensor3">xxx</div>
+            <div class="sensor">wort</div>
+            <div class="sensor">water</div>
+            <div class="sensor">aux</div>
+            <div id="Temp Sensor 1" class="sensor">xxx</div>
+            <div id="Temp Sensor 2" class="sensor">xxx</div>
+            <div id="Temp Sensor 3" class="sensor">xxx</div>
+            <div id="Relay 1" class="sensor" onclick="actorOn('Relay 1', relayValue1)">pump</div>
+            <div id="Relay 2" class="sensor" onclick="actorOn('Relay 2', relayValue2)">circ</div>
+            <div id="Relay 3" class="sensor" onclick="actorOn('Relay 3', relayValue3)">heat</div>
         </div>
         <div>
          <input id="button" type="submit" name="Relay 1" value="Relay ON" onclick="actorOn(relayName, relayValue)"/>

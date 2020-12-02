@@ -63,6 +63,16 @@ func postActor(name string, action string) error {
 	vals := url.Values{"Name": {name}, "Action": {action}}
 	s := fmt.Sprintf("http://127.0.0.1:8090/setactor/%s/%s", vals["Name"][0], vals["Action"][0])
 
+	jsDoc := js.Global().Get("document")
+	if !jsDoc.Truthy() {
+		return WebError{"Unable to get document object"}
+	}
+
+	actor := jsDoc.Call("getElementById", name)
+	if !actor.Truthy() {
+		return WebError{"Unable to find relay id " + name}
+	}
+
 	go func() {
 		resp, err := http.PostForm(s, vals)
 		if err != nil {
@@ -78,8 +88,18 @@ func postActor(name string, action string) error {
 		defer resp.Body.Close()
 
 		sBody := string(body)
-		if sBody == "ON" || sBody == "OFF" {
+		if sBody == "ON" {
 			fmt.Printf("Status=%s\n", sBody)
+			actor.Call("setAttribute", "style", "background:red;")
+			if !actor.Truthy() {
+				fmt.Printf("unable to set style background-color %s\n", name)
+			}
+		} else if sBody == "OFF" {
+			fmt.Printf("Status=%s\n", sBody)
+			actor.Call("setAttribute", "style", "background:black;")
+			if !actor.Truthy() {
+				fmt.Printf("unable to set style background-color %s\n", name)
+			}
 		} else {
 			fmt.Printf("Unknown response = %s\n", sBody)
 		}
@@ -146,12 +166,65 @@ func onSensorUpdate(name string) error {
 
 }
 
+func onActorUpdate(name string) error {
+
+	fmt.Printf("onActorUpdate %s\n", name)
+	s := fmt.Sprintf("http://127.0.0.1:8090/getactor/%s", name)
+
+	jsDoc := js.Global().Get("document")
+	if !jsDoc.Truthy() {
+		return WebError{"Unable to get document object"}
+	}
+
+	actor := jsDoc.Call("getElementById", name)
+	if !actor.Truthy() {
+		return WebError{"Unable to find relay id " + name}
+	}
+
+	go func() {
+		resp, err := http.Get(s)
+		if err != nil {
+			fmt.Printf("relay:%s GET error:%s\n", name, err.Error())
+			return
+		}
+
+		body, err2 := ioutil.ReadAll(resp.Body)
+		if err2 != nil {
+			fmt.Printf("Relay:%s Read error:%s\n", name, err2.Error())
+		}
+
+		defer resp.Body.Close()
+
+		sBody := string(body)
+		actor.Set("innerText", sBody)
+
+		if sBody == "ON" {
+			fmt.Printf("Status=%s\n", sBody)
+			actor.Call("setAttribute", "style", "background:red;")
+			if !actor.Truthy() {
+				fmt.Printf("unable to set style background-color %s\n", name)
+			}
+		} else if sBody == "OFF" {
+			fmt.Printf("Status=%s\n", sBody)
+			actor.Call("setAttribute", "style", "background:black;")
+			if !actor.Truthy() {
+				fmt.Printf("unable to set style background-color %s\n", name)
+			}
+		}
+
+	}()
+
+	return nil
+
+}
+
 func main() {
 	fmt.Println("Go Web Assembly")
 	js.Global().Set("formatJSON", jsonWrapper())
 	js.Global().Set("UpdateRelayValue", postActorWapper())
 	//js.Global().Set("postSensorUpdate", postSensorUpdateWapper())
-	sensors := []string{"Temp_Sensor_1", "Temp_Sensor_2", "Temp_Sensor_3"}
+	sensors := []string{"Temp Sensor 1", "Temp Sensor 2", "Temp Sensor 3"}
+	actors := []string{"Relay 1", "Relay 2", "Relay 3"}
 
 	//<-make(chan bool)
 	t := time.NewTicker(5000 * time.Millisecond)
@@ -162,6 +235,12 @@ func main() {
 			err := onSensorUpdate(sensor)
 			if err != nil {
 				fmt.Printf("sensor read error: %s\n", err.Error())
+			}
+		}
+		for _, actor := range actors {
+			err := onActorUpdate(actor)
+			if err != nil {
+				fmt.Printf("actor read error: %s\n", err.Error())
 			}
 		}
 	}

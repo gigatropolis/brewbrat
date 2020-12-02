@@ -204,9 +204,9 @@ func (rim *SimpleRIMM) InitEquipment(name string, logger *Logger, properties []P
 	rim.PowerOn = props.InitProperty("Power On", "int", 147, "Power goes on if temperature drops below this value").(int)
 	rim.PowerOff = props.InitProperty("Power Off", "int", 150, "Power goes Off if temperature goes above this value").(int)
 	rim.TempProbeName = props.InitProperty("Temperature Sensor", "string", "Temp Sensor 1", "Name of Temperature Sensor").(string)
-	rim.HeaterName = props.InitProperty("Pump Name", "string", "Dummy Relay 1", "Name of actor used to control Heater").(string)
-	rim.PumpName = props.InitProperty("Heater Name", "string", "Dummy Relay 2", "Name of actor used to control Pump").(string)
-	rim.AgitatorName = props.InitProperty("Agitator Name", "string", "Dummy Relay 3", "Name of actor used to for agitation").(string)
+	rim.HeaterName = props.InitProperty("Pump Name", "string", "Relay 1", "Name of actor used to control Heater").(string)
+	rim.PumpName = props.InitProperty("Heater Name", "string", "Relay 2", "Name of actor used to control Pump").(string)
+	rim.AgitatorName = props.InitProperty("Agitator Name", "string", "Relay 3", "Name of actor used to for agitation").(string)
 
 	rim.AddSensor(rim.TempProbeName)
 	rim.AddActor(rim.HeaterName)

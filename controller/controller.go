@@ -8,7 +8,6 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"./www/cmd/server"
@@ -20,7 +19,8 @@ import (
 // HandleWebMessage recieves all messages coming from web UI and calls appropriate handlers
 func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
 
-	name := strings.ReplaceAll(msg.DeviceName, "_", " ")
+	//name := strings.ReplaceAll(msg.DeviceName, "_", " ")
+	name := msg.DeviceName
 	switch msg.Cmd {
 	case server.CmdSetRelay:
 		relay, ok := actors[name]
@@ -46,6 +46,15 @@ func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
 			msg.ChanReturn <- val
 		} else {
 			msg.ChanReturn <- "bad"
+		}
+	case server.CmdGetActorValue:
+		if relay, ok := actors[name]; ok {
+			state := relay.GetState()
+			if state == control.StateOn {
+				msg.ChanReturn <- "ON"
+			} else {
+				msg.ChanReturn <- "OFF"
+			}
 		}
 	default:
 
