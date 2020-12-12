@@ -165,17 +165,17 @@ func (eq *Equipment) handleMessage(message EquipMessage) error {
 			}
 		}
 		for _, actor := range message.Actors {
-			eq.LogMessage("start CmdUpdateDevices::eq.handleMessage '%s'", actor.Name)
+			//eq.LogMessage("start CmdUpdateDevices::eq.handleMessage '%s'", actor.Name)
 			a, ok := eq.Actors[actor.Name]
 			if ok {
 				if a.State != actor.State &&
 					eq.IsDummyDevice() {
-					eq.LogMessage("start CmdUpdateDevices: eq.handleMessage '%s' Handled", actor.Name)
+					//eq.LogMessage("start CmdUpdateDevices: eq.handleMessage '%s' Handled", actor.Name)
 					cmd := "OFF"
 					if actor.State == StateOn {
 						cmd = "ON"
 					}
-					eq.LogMessage("Actor out %s", actor.Name)
+					//eq.LogMessage("Actor out %s", actor.Name)
 					name := eq.getActorControl(actor.Name)
 
 					eq.out <- EquipMessage{DeviceName: name, Cmd: CmdSendNotification, StrParam1: cmd}
@@ -265,7 +265,7 @@ func (rim *SimpleRIMM) updateActors() error {
 func (rim *SimpleRIMM) updateHistorisis() error {
 
 	temp, ok := rim.Sensors[rim.TempProbeName]
-	rim.LogMessage("temp.Value %0.2f", temp.Value)
+	//rim.LogMessage("temp.Value %0.2f", temp.Value)
 	if !ok {
 		return nil
 	}

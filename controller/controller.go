@@ -32,14 +32,17 @@ func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
 				relay.Off()
 			}
 		}
+		msg.ChanReturn <- "ack"
 	case server.CmdRelayOn:
 		if relay, ok := actors[name]; ok {
 			relay.On()
 		}
+		msg.ChanReturn <- "ack"
 	case server.CmdRelayOff:
 		if relay, ok := actors[name]; ok {
 			relay.Off()
 		}
+		msg.ChanReturn <- "ack"
 	case server.CmdGetSensorValue:
 		if sensor, ok := sensValues[name]; ok {
 			val := fmt.Sprintf("%.2f", sensor)
@@ -55,9 +58,11 @@ func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
 			} else {
 				msg.ChanReturn <- "OFF"
 			}
+		} else {
+			msg.ChanReturn <- "bad"
 		}
 	default:
-
+		msg.ChanReturn <- "Unknown"
 	}
 }
 
@@ -94,12 +99,12 @@ func HandleDevices(sensors map[string]control.ISensor, actors map[string]control
 
 		select {
 		case resvMsg := <-chnSensor:
-			name := resvMsg.Name
-			fmt.Printf("Recieved from '%s': Value %.3f%s\n", name, resvMsg.Value, sensors[name].GetUnits())
+			//name := resvMsg.Name
+			//fmt.Printf("Recieved from '%s': Value %.3f%s\n", name, resvMsg.Value, sensors[name].GetUnits())
 			sensValues[resvMsg.Name] = resvMsg.Value
 			needUpdateSensors = true
 		case eqMesg := <-chnEquipOut:
-			fmt.Printf("Recieved from Equipment '%s'\n", eqMesg.StrParam1)
+			//fmt.Printf("Recieved from Equipment '%s'\n", eqMesg.StrParam1)
 			switch eqMesg.Cmd {
 			case control.CmdSendNotification:
 				sensor, ok := sensors[eqMesg.DeviceName]

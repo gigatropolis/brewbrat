@@ -130,7 +130,7 @@ func postActorWapper() js.Func {
 
 func onSensorUpdate(name string) error {
 
-	fmt.Printf("onSensorUpdate %s\n", name)
+	//fmt.Printf("onSensorUpdate %s\n", name)
 	s := fmt.Sprintf("http://127.0.0.1:8090/getsensor/%s", name)
 
 	jsDoc := js.Global().Get("document")
@@ -168,7 +168,7 @@ func onSensorUpdate(name string) error {
 
 func onActorUpdate(name string) error {
 
-	fmt.Printf("onActorUpdate %s\n", name)
+	//fmt.Printf("onActorUpdate %s\n", name)
 	s := fmt.Sprintf("http://127.0.0.1:8090/getactor/%s", name)
 
 	jsDoc := js.Global().Get("document")
@@ -178,7 +178,8 @@ func onActorUpdate(name string) error {
 
 	actor := jsDoc.Call("getElementById", name)
 	if !actor.Truthy() {
-		return WebError{"Unable to find relay id " + name}
+		fmt.Printf("relay:%s relay:%s getElementById\n", name)
+		return WebError{"relay:" + name + " getElementById error\n"}
 	}
 
 	go func() {
@@ -191,6 +192,7 @@ func onActorUpdate(name string) error {
 		body, err2 := ioutil.ReadAll(resp.Body)
 		if err2 != nil {
 			fmt.Printf("Relay:%s Read error:%s\n", name, err2.Error())
+			return
 		}
 
 		defer resp.Body.Close()
@@ -199,19 +201,20 @@ func onActorUpdate(name string) error {
 		actor.Set("innerText", sBody)
 
 		if sBody == "ON" {
-			fmt.Printf("Status=%s\n", sBody)
+			//fmt.Printf("Status=%s\n", sBody)
 			actor.Call("setAttribute", "style", "background:red;")
 			if !actor.Truthy() {
 				fmt.Printf("unable to set style background-color %s\n", name)
 			}
 		} else if sBody == "OFF" {
-			fmt.Printf("Status=%s\n", sBody)
+			//fmt.Printf("Status=%s\n", sBody)
 			actor.Call("setAttribute", "style", "background:black;")
 			if !actor.Truthy() {
 				fmt.Printf("unable to set style background-color %s\n", name)
 			}
 		} else {
-			fmt.Printf("Can't determine Actor status. Recieved: %s\n", sBody)
+			fmt.Printf("'%s' Can't determine Actor status. Recieved: %s\n", name, sBody)
+			actor.Call("setAttribute", "style", "background:grey;")
 		}
 
 	}()
