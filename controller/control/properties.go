@@ -33,20 +33,8 @@ func (p *Properties) updatePropertyValue(name string, value interface{}) interfa
 
 func (p *Properties) InitProperty(name string, proptype string, value interface{}, comment string) interface{} {
 
-	if proptype == "bool" {
-		v := value.(string)
-		if v == "1" || v == "true" || v == "True" {
-			value = true
-		} else {
-			value = false
-		}
-	}
 	if _, present := (*p)[name]; !present {
 		p.AddProperty(name, proptype, value, comment)
-	} else {
-		if (*p)[name].Value == nil && value != nil {
-			p.updatePropertyValue(name, value)
-		}
 	}
 	return (*p)[name].Value
 }
@@ -54,6 +42,20 @@ func (p *Properties) InitProperty(name string, proptype string, value interface{
 // AddProperty to the list of Properties. Will overwrite if already exists
 // returns the value that is added as interface{}
 func (p *Properties) AddProperty(name string, proptype string, value interface{}, comment string) interface{} {
+
+	if proptype == "bool" {
+		switch v := value.(type) {
+		case string:
+			bVal := false
+			if v == "1" || v == "true" || v == "True" || v == "TRUE" {
+				bVal = true
+			}
+
+			(*p)[name] = Property{Name: name, PropType: proptype, Value: bVal, Comment: comment}
+			return (*p)[name].Value
+		}
+	}
+
 	(*p)[name] = Property{Name: name, PropType: proptype, Value: value, Comment: comment}
 	return (*p)[name].Value
 }

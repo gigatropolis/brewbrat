@@ -238,7 +238,7 @@ func (sen *DummyTempSensor) GetDefaultsConfig() ([]config.PropertyConfig, error)
 }
 
 func (sen *DummyTempSensor) SendNotification(notify string) error {
-	sen.LogMessage("set sen.state = %s", notify)
+	sen.LogMessage("%s: set sen.state = %s", sen.Name(), notify)
 	sen.state = notify
 	return nil
 }

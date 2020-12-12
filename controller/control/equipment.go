@@ -124,6 +124,18 @@ func (eq *Equipment) AddActor(name string) error {
 	return nil
 }
 
+func (eq *Equipment) getActorControl(name string) string {
+	if name == "Relay 1" {
+		return "Temp Sensor 1"
+	} else if name == "Relay 2" {
+		return "Temp Sensor 2"
+	} else if name == "Relay 3" {
+		return "Temp Sensor 3"
+	}
+
+	return "Relay 1"
+}
+
 func (eq *Equipment) readMessages() error {
 	var err error = nil
 	tWait := time.NewTimer(time.Millisecond * 4000)
@@ -153,18 +165,19 @@ func (eq *Equipment) handleMessage(message EquipMessage) error {
 			}
 		}
 		for _, actor := range message.Actors {
+			eq.LogMessage("start CmdUpdateDevices::eq.handleMessage '%s'", actor.Name)
 			a, ok := eq.Actors[actor.Name]
 			if ok {
-				if a.State != actor.State && actor.Name == "Dummy Relay 1" {
+				if a.State != actor.State &&
+					eq.IsDummyDevice() {
+					eq.LogMessage("start CmdUpdateDevices: eq.handleMessage '%s' Handled", actor.Name)
 					cmd := "OFF"
 					if actor.State == StateOn {
 						cmd = "ON"
 					}
-					name := "Temp Sensor 1"
-					if eq.IsDummyDevice() {
-						name = "Dummy Temp 1"
-					}
 					eq.LogMessage("Actor out %s", actor.Name)
+					name := eq.getActorControl(actor.Name)
+
 					eq.out <- EquipMessage{DeviceName: name, Cmd: CmdSendNotification, StrParam1: cmd}
 				}
 				a.State = actor.State

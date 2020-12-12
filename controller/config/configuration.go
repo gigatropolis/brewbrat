@@ -77,7 +77,8 @@ func DefaultEquipment(dummy bool) ([]EquipmentConfig, error) {
 				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
 				{Name: "Pump", Type: "string", Hidden: false, Value: "Dummy Relay 1", Comment: "Units for Sensor", Choice: ""},
 				{Name: "Circulator", Type: "string", Hidden: false, Value: "Dummy Relay 2", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Heater", Type: "string", Hidden: false, Value: "Dummy Relay 3", Comment: "Units for Sensor", Choice: ""}},
+				{Name: "Heater", Type: "string", Hidden: false, Value: "Dummy Relay 3", Comment: "Units for Sensor", Choice: ""},
+				{Name: "Dummy", Type: "bool", Hidden: false, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""}},
 		})
 
 	} else {
@@ -108,7 +109,8 @@ func DefaultSensorConfig(adrs []uint64, dummy bool) ([]SensorConfig, error) {
 				Type: "DummyTempSensor",
 				Properties: []PropertyConfig{
 					{Name: "Name", Type: "string", Hidden: false, Value: "Temp Sensor " + sNum, Comment: "Sensor Name", Choice: ""},
-					{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""}},
+					{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
+					{Name: "Dummy", Type: "bool", Hidden: false, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""}},
 			})
 		}
 	} else {
@@ -161,7 +163,10 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]Act
 		relayType = "DummyRelay"
 		ssType = "DummyRelay"
 	}
-
+	sDummy := "false"
+	if dummy {
+		sDummy = "true"
+	}
 	for indx, rel := range relayGPIO {
 		name := fmt.Sprintf("Relay %d", indx+1)
 		relayDefined = append(relayDefined, ActorsConfig{Name: name,
@@ -169,6 +174,7 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]Act
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "relay Name", Choice: ""},
 				{Name: "GPIO", Type: "string", Hidden: false, Value: rel, Comment: "GPIO by name", Choice: ""},
+				{Name: "Dummy", Type: "bool", Hidden: false, Value: sDummy, Comment: "Determine if this is a dummy device", Choice: ""},
 			},
 		})
 	}
@@ -180,6 +186,7 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]Act
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "SSR Name", Choice: ""},
 				{Name: "GPIO", Type: "string", Hidden: false, Value: ssrs, Comment: "GPIO by name", Choice: ""},
+				{Name: "Dummy", Type: "bool", Hidden: false, Value: sDummy, Comment: "Determine if this is a dummy device", Choice: ""},
 			},
 		})
 	}
@@ -190,6 +197,7 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]Act
 			Type: "DummyRelay",
 			Properties: []PropertyConfig{
 				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "Dummy relay Name", Choice: ""},
+				{Name: "Dummy", Type: "bool", Hidden: false, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""},
 			},
 		})
 	}

@@ -99,7 +99,7 @@ func HandleDevices(sensors map[string]control.ISensor, actors map[string]control
 			sensValues[resvMsg.Name] = resvMsg.Value
 			needUpdateSensors = true
 		case eqMesg := <-chnEquipOut:
-			//fmt.Printf("Recieved from Equipment\n")
+			fmt.Printf("Recieved from Equipment '%s'\n", eqMesg.StrParam1)
 			switch eqMesg.Cmd {
 			case control.CmdSendNotification:
 				sensor, ok := sensors[eqMesg.DeviceName]

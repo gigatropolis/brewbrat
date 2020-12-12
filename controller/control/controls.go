@@ -42,7 +42,7 @@ func (dev *Device) Init(name string, logger *Logger, properties []Property) erro
 	dev.Props.AddProperties(properties)
 	dev.DevName = name
 	props := dev.GetProperties()
-	dev.isDummy = props.InitProperty("Dummy", "bool", "false", "Is dummy device").(bool)
+	dev.isDummy = props.InitProperty("Dummy", "bool", false, "Is dummy device").(bool)
 
 	dev.LogMessage("Init Device '%s'", dev.Name())
 	return nil

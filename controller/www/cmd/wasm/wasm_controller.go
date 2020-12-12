@@ -210,6 +210,8 @@ func onActorUpdate(name string) error {
 			if !actor.Truthy() {
 				fmt.Printf("unable to set style background-color %s\n", name)
 			}
+		} else {
+			fmt.Printf("Can't determine Actor status. Recieved: %s\n", sBody)
 		}
 
 	}()
@@ -242,6 +244,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("actor read error: %s\n", err.Error())
 			}
+			time.Sleep(200 * time.Millisecond)
 		}
 	}
 }
