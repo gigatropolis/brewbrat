@@ -178,7 +178,7 @@ func onActorUpdate(name string) error {
 
 	actor := jsDoc.Call("getElementById", name)
 	if !actor.Truthy() {
-		fmt.Printf("relay:%s relay:%s getElementById\n", name)
+		fmt.Printf("getElementById::%s ERROR \n", name)
 		return WebError{"relay:" + name + " getElementById error\n"}
 	}
 
@@ -229,7 +229,7 @@ func main() {
 	js.Global().Set("UpdateRelayValue", postActorWapper())
 	//js.Global().Set("postSensorUpdate", postSensorUpdateWapper())
 	sensors := []string{"Temp Sensor 1", "Temp Sensor 2", "Temp Sensor 3"}
-	actors := []string{"Relay 1", "Relay 2", "Relay 3"}
+	actors := []string{"Relay 1", "Relay 2", "SSR 1"}
 
 	//<-make(chan bool)
 	t := time.NewTicker(5000 * time.Millisecond)

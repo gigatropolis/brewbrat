@@ -28,13 +28,16 @@ func enableCors(w *http.ResponseWriter) {
 // setActor handles route /setactor/{name}/{cmd}
 func setActor(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
-	fmt.Println("setActor()")
 	vars := mux.Vars(r)
+	fmt.Printf("setActor('%s')=%s", vars["name"], vars["cmd"])
 	w.WriteHeader(http.StatusOK)
 
-	svrChanOut <- ServerCommand{Cmd: CmdSetRelay, DeviceName: vars["name"], Value: []byte(vars["cmd"])}
+	ret := make(chan string)
+	svrChanOut <- ServerCommand{Cmd: CmdSetRelay, DeviceName: vars["name"], Value: []byte(vars["cmd"]), ChanReturn: ret}
+	retValue := <-ret
 
-	fmt.Fprintf(w, "%s", vars["cmd"]) // vars["name"], vars["cmd"])
+	fmt.Printf("setActor '%s' received: %s\n", vars["name"], retValue)
+	fmt.Fprintf(w, "%s", retValue) // vars["name"], vars["cmd"])
 }
 
 func getSensorValue(w http.ResponseWriter, r *http.Request) {

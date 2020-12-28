@@ -31,8 +31,15 @@ func HandleWebMessage(msg server.ServerCommand, sensValues SensorValues) {
 			} else {
 				relay.Off()
 			}
+			state := relay.GetState()
+			if state == control.StateOn {
+				msg.ChanReturn <- "ON"
+			} else {
+				msg.ChanReturn <- "OFF"
+			}
+		} else {
+			msg.ChanReturn <- "ack"
 		}
-		msg.ChanReturn <- "ack"
 	case server.CmdRelayOn:
 		if relay, ok := actors[name]; ok {
 			relay.On()
