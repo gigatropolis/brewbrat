@@ -17,6 +17,8 @@ const (
 	CmdRelaySetPower
 	CmdGetSensorValue
 	CmdGetActorValue
+	CmdSetSetpointValue
+	CmdGetSetpointValue
 )
 
 func enableCors(w *http.ResponseWriter) {
@@ -68,6 +70,35 @@ func getActorValue(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", retValue)
 }
 
+// setActor handles route /setactor/{name}/{cmd}
+func setSetpoint(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	vars := mux.Vars(r)
+	fmt.Printf("setSetpoint('%s')=%s", vars["name"], vars["setpoint"])
+	w.WriteHeader(http.StatusOK)
+
+	ret := make(chan string)
+	svrChanOut <- ServerCommand{Cmd: CmdSetSetpointValue, DeviceName: vars["name"], Value: []byte(vars["setpoint"]), ChanReturn: ret}
+	retValue := <-ret
+
+	fmt.Printf("setSetpoint '%s' received: %s\n", vars["name"], retValue)
+	fmt.Fprintf(w, "%s", retValue) // vars["name"], vars["setpoint"])
+}
+
+// setActor handles route /setactor/{name}/{cmd}
+func getSetpointValue(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	vars := mux.Vars(r)
+	w.WriteHeader(http.StatusOK)
+
+	ret := make(chan string)
+	svrChanOut <- ServerCommand{Cmd: CmdGetSetpointValue, DeviceName: vars["name"], ChanReturn: ret}
+	retValue := <-ret
+
+	fmt.Printf("getSetpointValue '%s' received: %s\n", vars["name"], retValue)
+	fmt.Fprintf(w, "%s", retValue)
+}
+
 type ServerCommand struct {
 	Cmd        int
 	DeviceName string
@@ -91,6 +122,8 @@ func RunWebServer(in SvrChanIn, out SvrChanOut) {
 	r.HandleFunc("/setactor/{name}/{cmd}", setActor)
 	r.HandleFunc("/getactor/{name}", getActorValue)
 	r.HandleFunc("/getsensor/{name}", getSensorValue)
+	r.HandleFunc("/setsetpoint/{name}/{setpoint}", setSetpoint)
+	r.HandleFunc("/getsetpoint/{setpoint}", getSetpointValue)
 
 	// This will serve files under http://localhost:8000/static/<filename>
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("www/assets"))))
