@@ -4,7 +4,7 @@
    <buzzers>
       <buzzer>
          <name>Main Buzzer</name>
-         <type>ActiveBuzzer</type>
+         <type>DummyBuzzer</type>
          <properties>
             <property name="Name" type="string" hidden="false" comment="Buzzer Name" choice="" select="">Main Buzzer</property>
          </properties>
@@ -12,80 +12,73 @@
    </buzzers>
    <equipment>
       <sensor>
-         <name>Equipment 1</name>
+         <name>Dummy Equipment 1</name>
          <type>SimpleRIMM</type>
          <properties>
-            <property name="Temperature Sensor" type="string" hidden="false" comment="Sensor Name" choice="" select="">Dummy Temp 1</property>
+            <property name="Temperature Sensor" type="string" hidden="false" comment="Sensor Name" choice="" select="">Temp Sensor 1</property>
             <property name="Units" type="string" hidden="false" comment="Units for Sensor" choice="" select="">°F</property>
-            <property name="Pump" type="string" hidden="false" comment="Units for Sensor" choice="" select="">Relay 1</property>
-            <property name="Circulator" type="string" hidden="false" comment="Units for Sensor" choice="" select="">Relay 2</property>
-            <property name="Heater" type="string" hidden="false" comment="Units for Sensor" choice="" select="">SSR 1</property>
+            <property name="Pump" type="string" hidden="false" comment="Units for Sensor" choice="" select="">Dummy Relay 1</property>
+            <property name="Circulator" type="string" hidden="false" comment="Units for Sensor" choice="" select="">Dummy Relay 2</property>
+            <property name="Heater" type="string" hidden="false" comment="Units for Sensor" choice="" select="">Dummy Relay 3</property>
+            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">true</property>
          </properties>
       </sensor>
    </equipment>
    <sensors>
       <sensor>
          <name>Temp Sensor 1</name>
-         <type>TempSensor</type>
+         <type>DummyTempSensor</type>
          <properties>
             <property name="Name" type="string" hidden="false" comment="Sensor Name" choice="" select="">Temp Sensor 1</property>
-            <property name="Address" type="uint" hidden="false" comment="1-Wire sensor address" choice="" select="">14267403663866305576</property>
             <property name="Units" type="string" hidden="false" comment="Units for Sensor" choice="" select="">°F</property>
+            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">true</property>
          </properties>
       </sensor>
       <sensor>
          <name>Temp Sensor 2</name>
-         <type>TempSensor</type>
+         <type>DummyTempSensor</type>
          <properties>
             <property name="Name" type="string" hidden="false" comment="Sensor Name" choice="" select="">Temp Sensor 2</property>
-            <property name="Address" type="uint" hidden="false" comment="1-Wire sensor address" choice="" select="">7205759448148251176</property>
             <property name="Units" type="string" hidden="false" comment="Units for Sensor" choice="" select="">°F</property>
+            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">true</property>
          </properties>
       </sensor>
       <sensor>
          <name>Temp Sensor 3</name>
-         <type>TempSensor</type>
-         <properties>
-            <property name="Name" type="string" hidden="false" comment="Sensor Name" choice="" select="">Temp Sensor 3</property>
-            <property name="Address" type="uint" hidden="false" comment="1-Wire sensor address" choice="" select="">14483576445964368424</property>
-            <property name="Units" type="string" hidden="false" comment="Units for Sensor" choice="" select="">°F</property>
-         </properties>
-      </sensor>
-      <sensor>
-         <name>Dummy Temp 1</name>
          <type>DummyTempSensor</type>
          <properties>
-            <property name="Name" type="string" hidden="false" comment="Sensor Name" choice="" select="">Dummy Temp 1</property>
+            <property name="Name" type="string" hidden="false" comment="Sensor Name" choice="" select="">Temp Sensor 3</property>
             <property name="Units" type="string" hidden="false" comment="Units for Sensor" choice="" select="">°F</property>
+            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">true</property>
          </properties>
       </sensor>
    </sensors>
    <actors>
       <actor>
          <name>Relay 1</name>
-         <type>SimpleRelay</type>
+         <type>DummyRelay</type>
          <properties>
             <property name="Name" type="string" hidden="false" comment="relay Name" choice="" select="">Relay 1</property>
             <property name="GPIO" type="string" hidden="false" comment="GPIO by name" choice="" select="">GPIO21</property>
-            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">false</property>
+            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">true</property>
          </properties>
       </actor>
       <actor>
          <name>Relay 2</name>
-         <type>SimpleRelay</type>
+         <type>DummyRelay</type>
          <properties>
             <property name="Name" type="string" hidden="false" comment="relay Name" choice="" select="">Relay 2</property>
             <property name="GPIO" type="string" hidden="false" comment="GPIO by name" choice="" select="">GPIO20</property>
-            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">false</property>
+            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">true</property>
          </properties>
       </actor>
       <actor>
          <name>SSR 1</name>
-         <type>SimpleSSR</type>
+         <type>DummyRelay</type>
          <properties>
             <property name="Name" type="string" hidden="false" comment="SSR Name" choice="" select="">SSR 1</property>
             <property name="GPIO" type="string" hidden="false" comment="GPIO by name" choice="" select="">GPIO16</property>
-            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">false</property>
+            <property name="Dummy" type="bool" hidden="false" comment="Determine if this is a dummy device" choice="" select="">true</property>
          </properties>
       </actor>
       <actor>
