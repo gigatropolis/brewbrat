@@ -22,6 +22,8 @@ type Controller interface {
 	InitController(reg *RegDevices, log *Logger, fileName string, isDummyController bool)
 	HandleWebMessage(msg server.ServerCommand)
 	OnHandleMessages()
+	Run()
+	OnStart()
 }
 
 type Control struct {
@@ -62,6 +64,8 @@ func (ctrl *Control) InitController(reg *RegDevices, log *Logger, fileName strin
 	ctrl.buzzers = make(map[string]IBuzzer)
 
 	ctrl.sensorValues = make(SensorValues)
+
+	ctrl.SetDefaultConfiguration()
 }
 
 func (ctrl *Control) SetDefaultConfiguration() {
@@ -119,13 +123,10 @@ func (ctrl *Control) SetDefaultConfiguration() {
 
 }
 
-func (ctrl *Control) Run() {
-
-	ctrl.SetDefaultConfiguration()
+func (ctrl *Control) OnStart() {
 
 	for _, sensor := range ctrl.sensors {
 		sensor.OnStart()
-		go sensor.Run()
 	}
 
 	for _, actor := range ctrl.actors {
@@ -134,11 +135,22 @@ func (ctrl *Control) Run() {
 
 	for _, eq := range ctrl.equipment {
 		eq.OnStart()
-		go eq.Run()
 	}
 
 	for _, buzzs := range ctrl.buzzers {
 		buzzs.OnStart()
+	}
+
+}
+
+func (ctrl *Control) Run() {
+
+	for _, sensor := range ctrl.sensors {
+		go sensor.Run()
+	}
+
+	for _, eq := range ctrl.equipment {
+		go eq.Run()
 	}
 
 	ctrl.buzzers["Main Buzzer"].PlaySound("Main")
@@ -218,16 +230,20 @@ func (ctrl *Control) OnHandleMessages() {
 // HandleWebServer recieves all incoming messages from web server
 func (ctrl *Control) HandleWebServer() {
 	t := time.NewTicker(5000 * time.Millisecond)
-
+	tickCount := 0
 	for true {
 		select {
 		case in := <-ctrl.svrOut:
-			ctrl.logger.LogMessage("Got message")
+			//ctrl.logger.LogMessage("Got message")
 			ctrl.HandleWebMessage(in)
 		case <-t.C:
-			ctrl.logger.LogMessage("tick")
+			if tickCount > 10 {
+				ctrl.logger.LogMessage("tick")
+				tickCount = 0
+			}
 		}
 	}
+	tickCount++
 }
 
 // HandleDevices  listens on device channels like sensors and equipment to handle incomming messages.

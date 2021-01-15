@@ -76,7 +76,7 @@ func (sen *Sensor) SetValue(value float64) error {
 // User doesn't need to override Run() methos but at least override OnRead() to get sensor value.
 // Override this method to change default behavior
 func (sen *Sensor) startRun(fRead func() (float64, error)) error {
-
+	sen.LogMessage("Start Run %s", sen.Name())
 	active := true
 	for active {
 		value, err := fRead()
@@ -88,7 +88,7 @@ func (sen *Sensor) startRun(fRead func() (float64, error)) error {
 			if err != nil {
 				sen.LogMessage("can't set sensor value")
 			}
-			//sen.LogMessage("Sensor value = %.3f%s", value, t1.GetUnits())
+			//sen.LogMessage("Sensor value = %.3f%s", value, sen.GetUnits())
 		}
 		time.Sleep(time.Second * 3)
 	}

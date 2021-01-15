@@ -52,7 +52,7 @@ func getSensorValue(w http.ResponseWriter, r *http.Request) {
 	svrChanOut <- ServerCommand{Cmd: CmdGetSensorValue, DeviceName: vars["name"], ChanReturn: ret}
 	retValue := <-ret
 
-	fmt.Printf("getSensorValue '%s' received: %s\n", vars["name"], retValue)
+	//fmt.Printf("getSensorValue '%s' received: %s\n", vars["name"], retValue)
 	fmt.Fprintf(w, "%s", retValue)
 }
 
@@ -66,7 +66,7 @@ func getActorValue(w http.ResponseWriter, r *http.Request) {
 	svrChanOut <- ServerCommand{Cmd: CmdGetActorValue, DeviceName: vars["name"], ChanReturn: ret}
 	retValue := <-ret
 
-	fmt.Printf("getActorValue '%s' received: %s\n", vars["name"], retValue)
+	//fmt.Printf("getActorValue '%s' received: %s\n", vars["name"], retValue)
 	fmt.Fprintf(w, "%s", retValue)
 }
 

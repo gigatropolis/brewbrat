@@ -240,7 +240,7 @@ func (rim *SimpleRIMM) Run() error {
 }
 
 func (rim *SimpleRIMM) NextStep() error {
-	rim.LogMessage("rim.NextStep")
+	//rim.LogMessage("rim.NextStep")
 
 	switch rim.State {
 	case EqStateActive:
@@ -250,7 +250,7 @@ func (rim *SimpleRIMM) NextStep() error {
 }
 
 func (rim *SimpleRIMM) updateActors() error {
-	rim.LogMessage("rim.updateActors")
+	//rim.LogMessage("rim.updateActors")
 
 	var err error = nil
 	switch rim.Mode {

@@ -20,6 +20,26 @@ func (w WebError) Error() string {
 	return w.err
 }
 
+func getValueFromServer(request string, name string) (string, error) {
+	resp, err := http.Get(request)
+	if err != nil {
+		fmt.Printf("Sensor:%s GET error:%s\n", name, err.Error())
+		return "", WebError{"Unable send GET request"}
+	}
+
+	body, err2 := ioutil.ReadAll(resp.Body)
+	if err2 != nil {
+		fmt.Printf("Relay:%s Read error:%s\n", name, err2.Error())
+		return "", WebError{"getValueFromServer Unable resp.Body"}
+	}
+
+	defer resp.Body.Close()
+
+	sBody := string(body)
+
+	return sBody, nil
+
+}
 func prettyJSON(input string) (string, error) {
 	var raw interface{}
 	if err := json.Unmarshal([]byte(input), &raw); err != nil {
@@ -128,10 +148,10 @@ func postActorWapper() js.Func {
 	return actorFunc
 }
 
-func onSensorUpdate(name string) error {
+func onSetpointUpdate(name string) error {
 
-	//fmt.Printf("onSensorUpdate %s\n", name)
-	s := fmt.Sprintf("http://127.0.0.1:8090/getsensor/%s", name)
+	//fmt.Printf("onSetpointUpdate %s\n", name)
+	request := fmt.Sprintf("http://127.0.0.1:8090/getsetpoint/%s", name)
 
 	jsDoc := js.Global().Get("document")
 	if !jsDoc.Truthy() {
@@ -144,22 +164,41 @@ func onSensorUpdate(name string) error {
 	}
 
 	go func() {
-		resp, err := http.Get(s)
+		value, err := getValueFromServer(request, name)
 		if err != nil {
-			fmt.Printf("Sensor:%s GET error:%s\n", name, err.Error())
+			fmt.Printf("Unable to get document object")
 			return
 		}
+		sensor.Set("innerText", value)
 
-		body, err2 := ioutil.ReadAll(resp.Body)
-		if err2 != nil {
-			fmt.Printf("Relay:%s Read error:%s\n", name, err2.Error())
+	}()
+
+	return nil
+
+}
+
+func onSensorUpdate(name string) error {
+
+	//fmt.Printf("onSensorUpdate %s\n", name)
+	request := fmt.Sprintf("http://127.0.0.1:8090/getsetpoint/%s", name)
+
+	jsDoc := js.Global().Get("document")
+	if !jsDoc.Truthy() {
+		return WebError{"Unable to get document object"}
+	}
+
+	sensor := jsDoc.Call("getElementById", name)
+	if !sensor.Truthy() {
+		return WebError{"Unable to find sensor id " + name}
+	}
+
+	go func() {
+		value, err := getValueFromServer(request, name)
+		if err != nil {
+			fmt.Printf("Unable to get document object")
+			return
 		}
-
-		defer resp.Body.Close()
-
-		sBody := string(body)
-		sensor.Set("innerText", sBody)
-
+		sensor.Set("innerText", value)
 	}()
 
 	return nil
@@ -229,6 +268,7 @@ func main() {
 	js.Global().Set("UpdateRelayValue", postActorWapper())
 	//js.Global().Set("postSensorUpdate", postSensorUpdateWapper())
 	sensors := []string{"Temp Sensor 1", "Temp Sensor 2", "Temp Sensor 3"}
+	setpoints := []string{"Setpoint 1", "Setpoint 2", "Setpoint 3"}
 	actors := []string{"Relay 1", "Relay 2", "SSR 1"}
 
 	//<-make(chan bool)
@@ -240,6 +280,12 @@ func main() {
 			err := onSensorUpdate(sensor)
 			if err != nil {
 				fmt.Printf("sensor read error: %s\n", err.Error())
+			}
+		}
+		for _, setpoint := range setpoints {
+			err := onSetpointUpdate(setpoint)
+			if err != nil {
+				fmt.Printf("Setpoint read error: %s\n", err.Error())
 			}
 		}
 		for _, actor := range actors {

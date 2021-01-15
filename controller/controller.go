@@ -39,6 +39,7 @@ func main() {
 
 	controller := control.Control{}
 	controller.InitController(&regDevices, &logger, *flgConfig, *flgDummy)
+	controller.OnStart()
 	controller.Run()
 
 }
