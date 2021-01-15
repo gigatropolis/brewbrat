@@ -217,6 +217,18 @@ func (ctrl *Control) HandleWebMessage(msg server.ServerCommand) {
 		} else {
 			msg.ChanReturn <- "bad"
 		}
+	case server.CmdGetSetpointValue:
+		if sensor, ok := ctrl.sensors[name]; ok {
+			setpoint, err := sensor.GetSetpoint()
+			if err != nil {
+				msg.ChanReturn <- "bad"
+			} else {
+				val := fmt.Sprintf("%.2f", setpoint)
+				msg.ChanReturn <- "OFF"
+			}
+		} else {
+			msg.ChanReturn <- "bad"
+		}
 	default:
 		msg.ChanReturn <- "Unknown"
 	}

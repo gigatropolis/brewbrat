@@ -100,10 +100,11 @@ func getSetpointValue(w http.ResponseWriter, r *http.Request) {
 }
 
 type ServerCommand struct {
-	Cmd        int
-	DeviceName string
-	Value      []byte
-	ChanReturn chan string
+	Cmd           int
+	EquipmentName string
+	DeviceName    string
+	Value         []byte
+	ChanReturn    chan string
 }
 
 type SvrChanIn chan ServerCommand
@@ -122,7 +123,7 @@ func RunWebServer(in SvrChanIn, out SvrChanOut) {
 	r.HandleFunc("/setactor/{name}/{cmd}", setActor)
 	r.HandleFunc("/getactor/{name}", getActorValue)
 	r.HandleFunc("/getsensor/{name}", getSensorValue)
-	r.HandleFunc("/setsetpoint/{name}/{setpoint}", setSetpoint)
+	r.HandleFunc("/setsetpoint/{equipment}/{name}/{setpoint}", setSetpoint)
 	r.HandleFunc("/getsetpoint/{setpoint}", getSetpointValue)
 
 	// This will serve files under http://localhost:8000/static/<filename>

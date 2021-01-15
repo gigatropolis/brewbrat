@@ -15,6 +15,8 @@ const (
 	CmdActorOff
 	CmdActorChange
 	CmdSendNotification
+	CmdSetSetpoint
+	CmdGetSetpoint
 )
 
 const (
