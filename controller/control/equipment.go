@@ -58,18 +58,21 @@ type IEquipment interface {
 	InitEquipment(name string, logger *Logger, properties []Property, in <-chan EquipMessage, out chan<- EquipMessage) error
 	AddSensor(name string) error
 	AddActor(name string) error
+	GetSetpoint() (float64, error)
+	SetSetpoint(value float64) error
 	Run() error
 	NextStep() error
 }
 
 type Equipment struct {
 	Device
-	State   int
-	Mode    int
-	Sensors map[string]SensValue
-	Actors  map[string]ActValue
-	in      <-chan EquipMessage
-	out     chan<- EquipMessage
+	State    int
+	Mode     int
+	Setpoint float64
+	Sensors  map[string]SensValue
+	Actors   map[string]ActValue
+	in       <-chan EquipMessage
+	out      chan<- EquipMessage
 }
 
 // InitEquipment does that
@@ -138,6 +141,15 @@ func (eq *Equipment) getActorControl(name string) string {
 	return "Relay 1"
 }
 
+func (eq *Equipment) GetSetpoint() (float64, error) {
+	return eq.Setpoint, nil
+}
+
+func (eq *Equipment) SetSetpoint(value float64) error {
+	eq.Setpoint = value
+	return nil
+}
+
 func (eq *Equipment) readMessages() error {
 	var err error = nil
 	tWait := time.NewTimer(time.Millisecond * 4000)
@@ -204,8 +216,8 @@ func (eq *Equipment) OnStart() error {
 
 type SimpleRIMM struct {
 	Equipment
-	PowerOn       int
-	PowerOff      int
+	PowerOn       float64
+	PowerOff      float64
 	TempProbeName string
 	HeaterName    string
 	PumpName      string
@@ -216,8 +228,9 @@ func (rim *SimpleRIMM) InitEquipment(name string, logger *Logger, properties []P
 	rim.Equipment.InitEquipment(name, logger, properties, in, out)
 
 	props := rim.GetProperties()
-	rim.PowerOn = props.InitProperty("Power On", "int", 147, "Power goes on if temperature drops below this value").(int)
-	rim.PowerOff = props.InitProperty("Power Off", "int", 150, "Power goes Off if temperature goes above this value").(int)
+	rim.PowerOn = props.InitProperty("Power On", "float", 0.8, "Power goes on if temperature drops below this value").(float64)
+	rim.PowerOff = props.InitProperty("Power Off", "float", 0.3, "Power goes Off if temperature goes above this value").(float64)
+	rim.SetSetpoint(props.InitProperty("Temperature Setpoint", "int", 135.5, "Equipment setpoint").(float64))
 	rim.TempProbeName = props.InitProperty("Temperature Sensor", "string", "Temp Sensor 1", "Name of Temperature Sensor").(string)
 	rim.HeaterName = props.InitProperty("Pump Name", "string", "Relay 1", "Name of actor used to control Heater").(string)
 	rim.PumpName = props.InitProperty("Heater Name", "string", "Relay 2", "Name of actor used to control Pump").(string)
@@ -271,14 +284,20 @@ func (rim *SimpleRIMM) updateHistorisis() error {
 	if !ok {
 		return nil
 	}
-	if int(temp.Value) > rim.PowerOff {
+
+	setpoint, err := rim.GetSetpoint()
+	if err != nil {
+		return nil
+	}
+
+	if temp.Value > (setpoint - rim.PowerOff) {
 		if act, ok := rim.Actors[rim.HeaterName]; ok {
 			if act.State != StateOff {
 				rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOff}
 			}
 		}
 	}
-	if int(temp.Value) < rim.PowerOn {
+	if temp.Value < (setpoint - rim.PowerOn) {
 		if act, ok := rim.Actors[rim.HeaterName]; ok {
 			if act.State != StateOn {
 				rim.out <- EquipMessage{DeviceName: rim.HeaterName, Cmd: CmdActorOn}

@@ -17,8 +17,8 @@ const (
 	CmdRelaySetPower
 	CmdGetSensorValue
 	CmdGetActorValue
-	CmdSetSetpointValue
 	CmdGetSetpointValue
+	CmdSetSetpointValue
 )
 
 func enableCors(w *http.ResponseWriter) {
@@ -95,7 +95,7 @@ func getSetpointValue(w http.ResponseWriter, r *http.Request) {
 	svrChanOut <- ServerCommand{Cmd: CmdGetSetpointValue, DeviceName: vars["name"], ChanReturn: ret}
 	retValue := <-ret
 
-	fmt.Printf("getSetpointValue '%s' received: %s\n", vars["name"], retValue)
+	//fmt.Printf("getSetpointValue '%s' received: %s\n", vars["name"], retValue)
 	fmt.Fprintf(w, "%s", retValue)
 }
 
@@ -123,8 +123,8 @@ func RunWebServer(in SvrChanIn, out SvrChanOut) {
 	r.HandleFunc("/setactor/{name}/{cmd}", setActor)
 	r.HandleFunc("/getactor/{name}", getActorValue)
 	r.HandleFunc("/getsensor/{name}", getSensorValue)
-	r.HandleFunc("/setsetpoint/{equipment}/{name}/{setpoint}", setSetpoint)
-	r.HandleFunc("/getsetpoint/{setpoint}", getSetpointValue)
+	r.HandleFunc("/setsetpoint/{name}/{setpoint}", setSetpoint)
+	r.HandleFunc("/getsetpoint/{name}", getSetpointValue)
 
 	// This will serve files under http://localhost:8000/static/<filename>
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("www/assets"))))

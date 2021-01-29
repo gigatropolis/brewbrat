@@ -180,7 +180,7 @@ func onSetpointUpdate(name string) error {
 func onSensorUpdate(name string) error {
 
 	//fmt.Printf("onSensorUpdate %s\n", name)
-	request := fmt.Sprintf("http://127.0.0.1:8090/getsetpoint/%s", name)
+	request := fmt.Sprintf("http://127.0.0.1:8090/getsensor/%s", name)
 
 	jsDoc := js.Global().Get("document")
 	if !jsDoc.Truthy() {
@@ -268,7 +268,7 @@ func main() {
 	js.Global().Set("UpdateRelayValue", postActorWapper())
 	//js.Global().Set("postSensorUpdate", postSensorUpdateWapper())
 	sensors := []string{"Temp Sensor 1", "Temp Sensor 2", "Temp Sensor 3"}
-	setpoints := []string{"Setpoint 1", "Setpoint 2", "Setpoint 3"}
+	setpoints := []string{"Dummy Equipment 1"}
 	actors := []string{"Relay 1", "Relay 2", "SSR 1"}
 
 	//<-make(chan bool)
