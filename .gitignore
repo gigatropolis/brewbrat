@@ -15,3 +15,7 @@ www/cmd/server/wwwsvr
 debug
 .vscode
 
+controller/controller
+controller/www/cmd/server/wwwsvr
+slackbot/calc/brat.code-workspace
+controller/configuration.xml

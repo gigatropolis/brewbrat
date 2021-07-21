@@ -34,7 +34,7 @@ type logArg struct {
 type logStream struct {
 	ChnLogInput chan logArg
 	level       uint64
-	logger      log.Logger
+	logger      *log.Logger
 }
 
 func (log *logStream) Start() {
@@ -132,7 +132,7 @@ func (clog *Logger) Add(name string, level uint64, stream io.Writer) {
 		return
 	}
 	if _, ok := clog.loggers[name]; !ok {
-		stream := logStream{level: level, logger: *log.New(stream, "", log.Ldate|log.Ltime|log.Lmicroseconds)}
+		stream := logStream{level: level, logger: log.New(stream, "", log.Ldate|log.Ltime|log.Lmicroseconds)}
 		stream.Start()
 		clog.loggers[name] = stream
 	}
