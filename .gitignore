@@ -15,3 +15,4 @@ www/cmd/server/wwwsvr
 debug
 .vscode
 
+slackbot/data/AllRecipes2.xml

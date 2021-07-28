@@ -8,8 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"../brewbrat/calc"
-	"../brewbrat/ingredients"
+	"./ingredients"
+
+	"./calc"
 	"github.com/nlopes/slack"
 )
 
