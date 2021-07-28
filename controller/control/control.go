@@ -157,6 +157,7 @@ func (ctrl *Control) Run() {
 
 	go ctrl.HandleDevices()
 
+	ctrl.logger.LogMessage("Web Server running at 127.0.0.1:8090")
 	go server.RunWebServer(ctrl.svrIn, ctrl.svrOut)
 
 	go ctrl.HandleWebServer()
