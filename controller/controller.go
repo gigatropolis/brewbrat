@@ -9,12 +9,42 @@ import (
 	"./control"
 )
 
+// SET GO111MODULE=off
+
 func main() {
 
-	flgDummy := flag.Bool("dummy", false, "Use dummy configuration")
-	flgConfig := flag.String("config", "configuration.xml", "XML configuration file to load")
-	flag.Parse()
-	if *flgDummy == true {
+	dummyMode := false
+	configName := ""
+	cmdMode := control.RunCmdMode
+
+	runCmd := flag.NewFlagSet("run", flag.ExitOnError)
+	runFlgDummy := runCmd.Bool("dummy", false, "Use dummy configuration")
+	runFlgConfig := runCmd.String("name", "configuration.xml", "XML configuration file to load")
+
+	configCmd := flag.NewFlagSet("config", flag.ExitOnError)
+	configFlgDummy := configCmd.Bool("dummy", false, "Use dummy configuration")
+	configFlgConfig := configCmd.String("name", "configuration.xml", "XML configuration name to save configuration")
+
+	if len(os.Args) < 2 {
+		fmt.Println("expected 'run' or 'config' subcommands")
+		os.Exit(1)
+	}
+
+	switch os.Args[1] {
+	case "run":
+		runCmd.Parse(os.Args[2:])
+		dummyMode = *runFlgDummy
+		configName = *runFlgConfig
+	case "config":
+		configCmd.Parse(os.Args[2:])
+		dummyMode = *configFlgDummy
+		configName = *configFlgConfig
+		cmdMode = control.ConfigCmdMode
+		//os.Exit(1)
+	}
+
+	// flag.Parse()
+	if *runFlgDummy == true {
 		fmt.Println("Dummy Configutation used")
 	}
 
@@ -38,8 +68,11 @@ func main() {
 	logger.Add("default", control.LogLevelAll, os.Stdout)
 
 	controller := control.Control{}
-	controller.InitController(&regDevices, &logger, *flgConfig, *flgDummy)
-	controller.OnStart()
-	controller.Run()
+	controller.InitController(&regDevices, &logger, cmdMode, configName, dummyMode)
+
+	if cmdMode != control.ConfigCmdMode {
+		controller.OnStart()
+		controller.Run()
+	}
 
 }

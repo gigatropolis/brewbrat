@@ -225,7 +225,7 @@ type DummyTempSensor struct {
 // InitSensor must initialize 1-wire host and call base init
 func (sen *DummyTempSensor) InitSensor(name string, logger *Logger, properties []Property, cnval chan<- SensorMessage) error {
 	sen.Sensor.InitSensor(name, logger, properties, cnval)
-	sen.LogMessage("init DummyTempSensor...")
+	sen.LogMessage("init DummyTempSensor (%s)...", sen.GetUnits())
 	return nil
 }
 

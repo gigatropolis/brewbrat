@@ -17,7 +17,7 @@ import (
 var botID string = "<@" + os.Getenv("BOT_ID") + ">"
 var botAlias = "@"
 
-// Errors is truct for errors interface
+// Errors is sruct for errors interface
 // num is error number
 // Message error string
 type Errors struct {

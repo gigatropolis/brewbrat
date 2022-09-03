@@ -12,6 +12,20 @@ import (
 	"../www/cmd/server"
 )
 
+const (
+	RunCmdMode = iota + 1
+	ConfigCmdMode
+)
+
+type sErr struct {
+	msg     string
+	errCode int
+}
+
+func (er *sErr) String() string {
+	return fmt.Sprint("ERROR (%d) %s", er.errCode, er.msg)
+}
+
 // SensorValues stores updated values from all registered sensors
 type SensorValues map[string]float64
 
@@ -28,6 +42,7 @@ type Controller interface {
 
 type Control struct {
 	regDevices        *RegDevices
+	configuration     *config.BrewController
 	logger            *Logger
 	isDummyController bool
 	configFileName    string
@@ -45,7 +60,7 @@ type Control struct {
 	chnAlive       chan int
 }
 
-func (ctrl *Control) InitController(reg *RegDevices, log *Logger, fileName string, isDummyController bool) {
+func (ctrl *Control) InitController(reg *RegDevices, log *Logger, cmdMode int, fileName string, isDummyController bool) error {
 	ctrl.regDevices = reg
 	ctrl.logger = log
 	ctrl.isDummyController = isDummyController
@@ -65,7 +80,34 @@ func (ctrl *Control) InitController(reg *RegDevices, log *Logger, fileName strin
 
 	ctrl.sensorValues = make(SensorValues)
 
-	ctrl.SetDefaultConfiguration()
+	ctrl.logger.LogMessage("fileName=%s, mode=%d", fileName, cmdMode)
+	if cmdMode == RunCmdMode {
+		buf, err := ioutil.ReadFile(fileName)
+		if err == nil {
+
+			ctrl.configuration = new(config.BrewController)
+			err = xml.Unmarshal(buf, ctrl.configuration)
+			if err != nil {
+				ctrl.logger.LogError("Unable to parse configuration file: '%s'. Will use default configuration", fileName)
+				ctrl.SetDefaultConfiguration()
+			}
+		} else {
+			ctrl.logger.LogError("Unable to read configuration file: '%s'. Will use default configuration", fileName)
+			ctrl.SetDefaultConfiguration()
+		}
+	} else if cmdMode == ConfigCmdMode {
+		ctrl.logger.LogMessage("fileName=%s", fileName)
+		if fileName == "default" {
+			ctrl.SetDefaultConfiguration()
+		}
+
+	} else {
+		//ctrl.SetDefaultConfiguration()
+		ctrl.logger.LogError("Unknown command mode (%d)", cmdMode)
+		return nil
+	}
+	ctrl.InitializeConfiguration()
+	return nil
 }
 
 func (ctrl *Control) SetDefaultConfiguration() {
@@ -86,8 +128,11 @@ func (ctrl *Control) SetDefaultConfiguration() {
 	configFile, _ := xml.MarshalIndent(defaultConfiguration, "", "   ")
 	//fmt.Println(string(configFile))
 	ioutil.WriteFile(ctrl.configFileName, configFile, 0644)
+	ctrl.configuration = &defaultConfiguration
+}
 
-	for _, sensor := range defaultConfiguration.Sensors {
+func (ctrl *Control) InitializeConfiguration() {
+	for _, sensor := range ctrl.configuration.Sensors {
 		if _, ok := (*ctrl.regDevices)[sensor.Type]; ok {
 			t1 := reflect.New((*ctrl.regDevices)[sensor.Type]).Interface().(ISensor)
 			t1.InitSensor(sensor.Name, ctrl.logger, toProperties(sensor.Properties), ctrl.chnSensorValue)
@@ -95,7 +140,7 @@ func (ctrl *Control) SetDefaultConfiguration() {
 		}
 	}
 
-	for _, actor := range defaultConfiguration.Actors {
+	for _, actor := range ctrl.configuration.Actors {
 		if _, ok := (*ctrl.regDevices)[actor.Type]; ok {
 			t1 := reflect.New((*ctrl.regDevices)[actor.Type]).Interface().(IActor)
 			t1.Init(actor.Name, ctrl.logger, toProperties(actor.Properties))
@@ -103,7 +148,7 @@ func (ctrl *Control) SetDefaultConfiguration() {
 		}
 	}
 
-	for _, eq := range defaultConfiguration.Equipment {
+	for _, eq := range ctrl.configuration.Equipment {
 
 		if _, ok := (*ctrl.regDevices)[eq.Type]; ok {
 			t1 := reflect.New((*ctrl.regDevices)[eq.Type]).Interface().(IEquipment)
@@ -112,7 +157,7 @@ func (ctrl *Control) SetDefaultConfiguration() {
 		}
 	}
 
-	for _, buz := range defaultConfiguration.Buzzers {
+	for _, buz := range ctrl.configuration.Buzzers {
 
 		if _, ok := (*ctrl.regDevices)[buz.Type]; ok {
 			t1 := reflect.New((*ctrl.regDevices)[buz.Type]).Interface().(IBuzzer)

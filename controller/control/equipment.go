@@ -78,7 +78,6 @@ type Equipment struct {
 // InitEquipment does that
 func (eq *Equipment) InitEquipment(name string, logger *Logger, properties []Property, in <-chan EquipMessage, out chan<- EquipMessage) error {
 	eq.Device.Init(name, logger, properties)
-
 	eq.in = in
 	eq.out = out
 	eq.Sensors = make(map[string]SensValue)
@@ -95,6 +94,7 @@ func (eq *Equipment) InitEquipment(name string, logger *Logger, properties []Pro
 	default:
 		eq.Mode = EqModeHistorisis
 	}
+	//eq.LogMessage("InitEquipment %d", eq.Mode)
 
 	return nil
 }
@@ -232,9 +232,9 @@ func (rim *SimpleRIMM) InitEquipment(name string, logger *Logger, properties []P
 	rim.PowerOff = props.InitProperty("Power Off", "float", 0.3, "Power goes Off if temperature goes above this value").(float64)
 	rim.SetSetpoint(props.InitProperty("Temperature Setpoint", "int", 135.5, "Equipment setpoint").(float64))
 	rim.TempProbeName = props.InitProperty("Temperature Sensor", "string", "Temp Sensor 1", "Name of Temperature Sensor").(string)
-	rim.HeaterName = props.InitProperty("Pump Name", "string", "Relay 1", "Name of actor used to control Heater").(string)
-	rim.PumpName = props.InitProperty("Heater Name", "string", "Relay 2", "Name of actor used to control Pump").(string)
-	rim.AgitatorName = props.InitProperty("Agitator Name", "string", "Relay 3", "Name of actor used to for agitation").(string)
+	rim.HeaterName = props.InitProperty("Pump", "string", "Relay 1", "Name of actor used to control Heater").(string)
+	rim.PumpName = props.InitProperty("Heater", "string", "Relay 2", "Name of actor used to control Pump").(string)
+	rim.AgitatorName = props.InitProperty("Agitator", "string", "Relay 3", "Name of actor used to for agitation").(string)
 
 	rim.AddSensor(rim.TempProbeName)
 	rim.AddActor(rim.HeaterName)
@@ -265,7 +265,7 @@ func (rim *SimpleRIMM) NextStep() error {
 }
 
 func (rim *SimpleRIMM) updateActors() error {
-	//rim.LogMessage("rim.updateActors")
+	rim.LogMessage("rim.updateActors")
 
 	var err error = nil
 	switch rim.Mode {
@@ -280,7 +280,7 @@ func (rim *SimpleRIMM) updateActors() error {
 func (rim *SimpleRIMM) updateHistorisis() error {
 
 	temp, ok := rim.Sensors[rim.TempProbeName]
-	//rim.LogMessage("temp.Value %0.2f", temp.Value)
+	rim.LogMessage("temp.Value %0.2f", temp.Value)
 	if !ok {
 		return nil
 	}
