@@ -2,6 +2,7 @@ package control
 
 import (
 	"fmt"
+	"strconv"
 )
 
 // Property attributes used by all devices
@@ -44,14 +45,35 @@ func (p *Properties) InitProperty(name string, proptype string, value interface{
 func (p *Properties) AddProperty(name string, proptype string, value interface{}, comment string) interface{} {
 
 	if proptype == "bool" {
-		switch v := value.(type) {
+		switch vType := value.(type) {
 		case string:
 			bVal := false
-			if v == "1" || v == "true" || v == "True" || v == "TRUE" {
+			if vType == "1" || vType == "true" || vType == "True" || vType == "TRUE" {
 				bVal = true
 			}
 
 			(*p)[name] = Property{Name: name, PropType: proptype, Value: bVal, Comment: comment}
+			return (*p)[name].Value
+		}
+	} else if proptype == "float" {
+		switch vType := value.(type) {
+		case string:
+			fVal, err := strconv.ParseFloat(vType, 64)
+			if err != nil {
+				fVal = 0.0
+			}
+			fmt.Println("fVAL = ", fVal)
+			(*p)[name] = Property{Name: name, PropType: proptype, Value: fVal, Comment: comment}
+			return (*p)[name].Value
+		}
+	} else if proptype == "int" {
+		switch vType := value.(type) {
+		case string:
+			iVal, err := strconv.ParseInt(vType, 10, 64)
+			if err != nil {
+				iVal = 0
+			}
+			(*p)[name] = Property{Name: name, PropType: proptype, Value: iVal, Comment: comment}
 			return (*p)[name].Value
 		}
 	}

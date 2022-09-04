@@ -23,7 +23,7 @@ type sErr struct {
 }
 
 func (er *sErr) String() string {
-	return fmt.Sprint("ERROR (%d) %s", er.errCode, er.msg)
+	return fmt.Sprintf("ERROR (%d) %s", er.errCode, er.msg)
 }
 
 // SensorValues stores updated values from all registered sensors
@@ -98,7 +98,26 @@ func (ctrl *Control) InitController(reg *RegDevices, log *Logger, cmdMode int, f
 	} else if cmdMode == ConfigCmdMode {
 		ctrl.logger.LogMessage("fileName=%s", fileName)
 		if fileName == "default" {
+			ctrl.configFileName = "configuration.xml"
 			ctrl.SetDefaultConfiguration()
+		} else {
+
+			//var availableLinknetAddresses []uint64
+			//if !ctrl.isDummyController {
+			//	availableLinknetAddresses, _ = GetActiveNetlinkAddresses(ctrl.logger)
+			//}
+
+			//rels := []string{"GPIO21", "GPIO20"}
+			//ssrs := []string{"GPIO16"}
+			//defaultConfiguration, conErr := config.DefaultConfiguration(availableLinknetAddresses, rels, ssrs, ctrl.isDummyController)
+			//if conErr != nil {
+			//	ctrl.logger.LogMessage("Unable to create default configuration::%s", conErr.Error())
+			//}
+
+			//configFile, _ := xml.MarshalIndent(defaultConfiguration, "", "   ")
+			//fmt.Println(string(configFile))
+			//ioutil.WriteFile(ctrl.configFileName, configFile, 0644)
+			//ctrl.configuration = &defaultConfiguration
 		}
 
 	} else {
@@ -256,8 +275,10 @@ func (ctrl *Control) HandleWebMessage(msg server.ServerCommand) {
 		if relay, ok := ctrl.actors[name]; ok {
 			state := relay.GetState()
 			if state == StateOn {
+				ctrl.logger.LogMessage("server.CmdGetActorValue %s ON", name)
 				msg.ChanReturn <- "ON"
 			} else {
+				ctrl.logger.LogMessage("server.CmdGetActorValue %s OFF", name)
 				msg.ChanReturn <- "OFF"
 			}
 		} else {
@@ -318,11 +339,11 @@ func (ctrl *Control) HandleDevices() {
 		select {
 		case resvMsg := <-ctrl.chnSensorValue:
 			//name := resvMsg.Name
-			//fmt.Printf("Recieved from '%s': Value %.3f%s\n", name, resvMsg.Value, sensors[name].GetUnits())
+			//fmt.Println("Recieved from '%s': Value %.3f\n", name, resvMsg.Value)
 			ctrl.sensorValues[resvMsg.Name] = resvMsg.Value
 			needUpdateSensors = true
 		case eqMesg := <-ctrl.EqOut:
-			//fmt.Printf("Recieved from Equipment '%s'\n", eqMesg.StrParam1)
+			fmt.Printf("Recieved from Equipment (%d) '%s' param(%s)\n", eqMesg.Cmd, eqMesg.DeviceName, eqMesg.StrParam1)
 			switch eqMesg.Cmd {
 			case CmdSendNotification:
 				sensor, ok := ctrl.sensors[eqMesg.DeviceName]
@@ -396,6 +417,12 @@ func toValueInterface(sType string, value string) interface{} {
 		i = value
 	case "uint":
 		i, _ = strconv.ParseUint(value, 10, 64)
+	case "int":
+		i, _ = strconv.ParseInt(value, 10, 64)
+	case "float":
+		f, _ := strconv.ParseFloat(value, 64)
+		// fmt.Println("toValueInterface (float) =", f)
+		return f
 	default:
 		i = value
 	}

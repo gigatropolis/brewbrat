@@ -16,6 +16,9 @@
          <type>SimpleRIMM</type>
          <properties>
             <property name="Temperature Sensor" type="string" hidden="false" comment="Sensor Name" choice="" select="">Temp Sensor 1</property>
+            <property name="Power On" type="float" hidden="false" comment="Power goes on if temperature drops below this value" choice="" select="">0.8</property>
+            <property name="Power Off" type="float" hidden="false" comment="Power goes Off if temperature goes above this value" choice="" select="">0.3</property>
+            <property name="Temperature Setpoint" type="float" hidden="false" comment="Equipment setpoint" choice="" select="">135.5</property>
             <property name="Units" type="string" hidden="false" comment="Units for Sensor" choice="" select="">°F</property>
             <property name="Pump" type="string" hidden="false" comment="Units for Sensor" choice="" select="">Dummy Relay 1</property>
             <property name="Agitator" type="string" hidden="false" comment="Units for Sensor" choice="" select="">Dummy Relay 2</property>

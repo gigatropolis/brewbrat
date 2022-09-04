@@ -69,6 +69,9 @@ type Equipment struct {
 	State    int
 	Mode     int
 	Setpoint float64
+	pump     string
+	agitator string
+	heater   string
 	Sensors  map[string]SensValue
 	Actors   map[string]ActValue
 	in       <-chan EquipMessage
@@ -85,6 +88,9 @@ func (eq *Equipment) InitEquipment(name string, logger *Logger, properties []Pro
 
 	props := eq.GetProperties()
 	mode := props.InitProperty("Control Mode", "string", "Historisis", "Control mode for equipment").(string)
+	eq.pump = props.InitProperty("Pump", "string", "Dummy Relay 1", "Sensor controlled by pump").(string)
+	eq.agitator = props.InitProperty("Agitator", "string", "Dummy Relay 2", "Sensor controlled by agitator").(string)
+	eq.heater = props.InitProperty("Heater", "string", "Dummy Relay 3", "Sensor controlled by heater").(string)
 
 	switch mode {
 	case "Historisis":
@@ -130,12 +136,12 @@ func (eq *Equipment) AddActor(name string) error {
 }
 
 func (eq *Equipment) getActorControl(name string) string {
-	if name == "Relay 1" {
+	if name == "Relay 1" || name == "Dummy Relay 1" {
 		return "Temp Sensor 1"
 	} else if name == "Relay 2" {
 		return "Temp Sensor 2"
 	} else if name == "Relay 3" {
-		return "Temp Sensor 3"
+		return "Temp Sensor 1"
 	}
 
 	return "Relay 1"
@@ -179,17 +185,17 @@ func (eq *Equipment) handleMessage(message EquipMessage) error {
 			}
 		}
 		for _, actor := range message.Actors {
-			//eq.LogMessage("start CmdUpdateDevices::eq.handleMessage '%s'", actor.Name)
+			eq.LogMessage("start CmdUpdateDevices::eq.handleMessage '%s'", actor.Name)
 			a, ok := eq.Actors[actor.Name]
 			if ok {
 				if a.State != actor.State &&
 					eq.IsDummyDevice() {
-					//eq.LogMessage("start CmdUpdateDevices: eq.handleMessage '%s' Handled", actor.Name)
+					eq.LogMessage("start CmdUpdateDevices: eq.handleMessage '%s' Handled", actor.Name)
 					cmd := "OFF"
 					if actor.State == StateOn {
 						cmd = "ON"
 					}
-					//eq.LogMessage("Actor out %s", actor.Name)
+					eq.LogMessage("Actor out %s", actor.Name)
 					name := eq.getActorControl(actor.Name)
 
 					eq.out <- EquipMessage{DeviceName: name, Cmd: CmdSendNotification, StrParam1: cmd}
@@ -228,10 +234,10 @@ func (rim *SimpleRIMM) InitEquipment(name string, logger *Logger, properties []P
 	rim.Equipment.InitEquipment(name, logger, properties, in, out)
 
 	props := rim.GetProperties()
+	rim.TempProbeName = props.InitProperty("Temperature Sensor", "string", "Temp Sensor 1", "Name of Temperature Sensor").(string)
+	rim.SetSetpoint(props.InitProperty("Temperature Setpoint", "float", 135.5, "Equipment setpoint").(float64))
 	rim.PowerOn = props.InitProperty("Power On", "float", 0.8, "Power goes on if temperature drops below this value").(float64)
 	rim.PowerOff = props.InitProperty("Power Off", "float", 0.3, "Power goes Off if temperature goes above this value").(float64)
-	rim.SetSetpoint(props.InitProperty("Temperature Setpoint", "int", 135.5, "Equipment setpoint").(float64))
-	rim.TempProbeName = props.InitProperty("Temperature Sensor", "string", "Temp Sensor 1", "Name of Temperature Sensor").(string)
 	rim.HeaterName = props.InitProperty("Pump", "string", "Relay 1", "Name of actor used to control Heater").(string)
 	rim.PumpName = props.InitProperty("Heater", "string", "Relay 2", "Name of actor used to control Pump").(string)
 	rim.AgitatorName = props.InitProperty("Agitator", "string", "Relay 3", "Name of actor used to for agitation").(string)
@@ -281,6 +287,7 @@ func (rim *SimpleRIMM) updateHistorisis() error {
 
 	temp, ok := rim.Sensors[rim.TempProbeName]
 	rim.LogMessage("temp.Value %0.2f", temp.Value)
+	//rim.LogMessage("rim.PowerOff %0.2f", rim.PowerOff)
 	if !ok {
 		return nil
 	}
@@ -289,6 +296,7 @@ func (rim *SimpleRIMM) updateHistorisis() error {
 	if err != nil {
 		return nil
 	}
+	//rim.LogMessage("setpoint %0.2f", setpoint)
 
 	if temp.Value > (setpoint - rim.PowerOff) {
 		if act, ok := rim.Actors[rim.HeaterName]; ok {

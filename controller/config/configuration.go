@@ -74,11 +74,14 @@ func DefaultEquipment(dummy bool) ([]EquipmentConfig, error) {
 			Type: "SimpleRIMM",
 			Properties: []PropertyConfig{
 				{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Temp Sensor 1", Comment: "Sensor Name", Choice: ""},
+				{Name: "Power On", Type: "float", Hidden: false, Value: "0.8", Comment: "Power goes on if temperature drops below this value", Choice: ""},
+				{Name: "Power Off", Type: "float", Hidden: false, Value: "0.3", Comment: "Power goes Off if temperature goes above this value", Choice: ""},
+				{Name: "Temperature Setpoint", Type: "float", Hidden: false, Value: "135.5", Comment: "Equipment setpoint", Choice: ""},
 				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Pump", Type: "string", Hidden: false, Value: "Dummy Relay 1", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Agitator", Type: "string", Hidden: false, Value: "Dummy Relay 2", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Heater", Type: "string", Hidden: false, Value: "Dummy Relay 3", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Dummy", Type: "bool", Hidden: false, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""}},
+				{Name: "Pump", Type: "string", Hidden: false, Value: "Dummy Relay 1", Comment: "Sensor controlled by", Choice: ""},
+				{Name: "Agitator", Type: "string", Hidden: false, Value: "Dummy Relay 2", Comment: "Sensor controlled by", Choice: ""},
+				{Name: "Heater", Type: "string", Hidden: false, Value: "Dummy Relay 3", Comment: "Sensor controlled by", Choice: ""},
+				{Name: "Dummy", Type: "bool", Hidden: true, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""}},
 		})
 
 	} else {
@@ -86,7 +89,7 @@ func DefaultEquipment(dummy bool) ([]EquipmentConfig, error) {
 			Name: "Equipment 1",
 			Type: "SimpleRIMM",
 			Properties: []PropertyConfig{
-				{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Dummy Temp 1", Comment: "Sensor Name", Choice: ""},
+				{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Temp Sensor 1", Comment: "Sensor Name", Choice: ""},
 				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
 				{Name: "Pump", Type: "string", Hidden: false, Value: "Relay 1", Comment: "Units for Sensor", Choice: ""},
 				{Name: "Agitator", Type: "string", Hidden: false, Value: "Relay 2", Comment: "Units for Sensor", Choice: ""},
@@ -110,7 +113,7 @@ func DefaultSensorConfig(adrs []uint64, dummy bool) ([]SensorConfig, error) {
 				Properties: []PropertyConfig{
 					{Name: "Name", Type: "string", Hidden: false, Value: "Temp Sensor " + sNum, Comment: "Sensor Name", Choice: ""},
 					{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
-					{Name: "Dummy", Type: "bool", Hidden: false, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""}},
+					{Name: "Dummy", Type: "bool", Hidden: true, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""}},
 			})
 		}
 	} else {
