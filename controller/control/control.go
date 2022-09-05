@@ -33,7 +33,7 @@ type SensorValues map[string]float64
 type RegDevices map[string]reflect.Type
 
 type Controller interface {
-	InitController(reg *RegDevices, log *Logger, fileName string, isDummyController bool)
+	InitController(reg *RegDevices, log *Logger, sensors []string, fileName string, isDummyController bool)
 	HandleWebMessage(msg server.ServerCommand)
 	OnHandleMessages()
 	Run()
@@ -60,7 +60,7 @@ type Control struct {
 	chnAlive       chan int
 }
 
-func (ctrl *Control) InitController(reg *RegDevices, log *Logger, cmdMode int, fileName string, isDummyController bool) error {
+func (ctrl *Control) InitController(reg *RegDevices, log *Logger, sensors []string, cmdMode int, fileName string, isDummyController bool) error {
 	ctrl.regDevices = reg
 	ctrl.logger = log
 	ctrl.isDummyController = isDummyController
