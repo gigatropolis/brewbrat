@@ -23,3 +23,4 @@ controller/www/cmd/server/wwwsvr
 slackbot/calc/brat.code-workspace
 controller/configuration.xml
 >>>>>>> 5132378cb7ebeedfd0aee89d8082e9002692595f
+controller/dummy_config.xml

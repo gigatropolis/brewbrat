@@ -102,6 +102,8 @@ func (ctrl *Control) InitController(reg *RegDevices, log *Logger, cmdMode int, f
 			ctrl.SetDefaultConfiguration()
 		} else {
 
+			ctrl.SetDefaultConfiguration()
+
 			//var availableLinknetAddresses []uint64
 			//if !ctrl.isDummyController {
 			//	availableLinknetAddresses, _ = GetActiveNetlinkAddresses(ctrl.logger)
@@ -275,11 +277,11 @@ func (ctrl *Control) HandleWebMessage(msg server.ServerCommand) {
 		if relay, ok := ctrl.actors[name]; ok {
 			state := relay.GetState()
 			if state == StateOn {
-				ctrl.logger.LogMessage("server.CmdGetActorValue %s ON", name)
+				//ctrl.logger.LogMessage("server.CmdGetActorValue %s ON", name)
 				msg.ChanReturn <- "ON"
 			} else {
 				ctrl.logger.LogMessage("server.CmdGetActorValue %s OFF", name)
-				msg.ChanReturn <- "OFF"
+				//msg.ChanReturn <- "OFF"
 			}
 		} else {
 			msg.ChanReturn <- "bad"
@@ -343,7 +345,7 @@ func (ctrl *Control) HandleDevices() {
 			ctrl.sensorValues[resvMsg.Name] = resvMsg.Value
 			needUpdateSensors = true
 		case eqMesg := <-ctrl.EqOut:
-			fmt.Printf("Recieved from Equipment (%d) '%s' param(%s)\n", eqMesg.Cmd, eqMesg.DeviceName, eqMesg.StrParam1)
+			//fmt.Printf("Recieved from Equipment (%d) '%s' param(%s)\n", eqMesg.Cmd, eqMesg.DeviceName, eqMesg.StrParam1)
 			switch eqMesg.Cmd {
 			case CmdSendNotification:
 				sensor, ok := ctrl.sensors[eqMesg.DeviceName]
