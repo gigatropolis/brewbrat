@@ -85,9 +85,9 @@ body {
             <div id="Drive 1" class="sensor">Drive</div>
             <div id="Drive 2" class="sensor">Drive</div>
             <div id="Drive 3" class="sensor">Drive</div>
-            <div id="Relay 1" class="sensor" onclick="actorOn('Relay 1', relayValue1)">pump</div>
-            <div id="Relay 2" class="sensor" onclick="actorOn('Relay 2', relayValue2)">circ</div>
-            <div id="SSR 1" class="sensor" onclick="actorOn('SSR 1', relayValue3)">heat</div>
+            <div id="Relay 1" class="sensor" onclick="var rel=relayValue1; relayValue1 = (relayValue1 == 'ON') ? 'OFF' : 'ON'; actorOn('Relay 1', rel)">pump</div>
+            <div id="Relay 2" class="sensor" onclick="var rel=relayValue2; relayValue2 = (relayValue2 == 'ON') ? 'OFF' : 'ON'; actorOn('Relay 2', rel)">circ</div>
+            <div id="SSR 1" class="sensor" onclick="var rel=relayValue3; relayValue3 = (relayValue3 == 'ON') ? 'OFF' : 'ON'; actorOn('SSR 1', rel)">heat</div>
         </div>
         <div>
          <input id="button" type="submit" name="Relay 1" value="Relay ON" onclick="actorOn(relayName, relayValue)"/>
@@ -101,10 +101,6 @@ body {
         var actorOn = function(name, action) {
             var result = UpdateRelayValue(name, action);
             console.log("Value returned from Go", result);
-            if (relayValue == "ON")
-                relayValue = "OFF";
-            else
-                relayValue = "ON";
         }
      </script>
 </html> 

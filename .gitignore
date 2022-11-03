@@ -19,3 +19,4 @@ slackbot/data/AllRecipes2.xml
 controller/dummy_config.xml
 controller/default.xml
 controller/configuration.xml
+controller/dummy_default.xml

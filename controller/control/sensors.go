@@ -217,6 +217,7 @@ type DummyTempSensor struct {
 	state     string
 	temp      float64
 	change    float64
+	maxChange float64
 	offset    float64
 	cnt       int
 	direction float64
@@ -246,14 +247,15 @@ func (sen *DummyTempSensor) SendNotification(notify string) error {
 // OnStart setup to start running
 func (sen *DummyTempSensor) OnStart() error {
 	if sen.GetUnits() == "°C" {
-		sen.temp = 50
+		sen.temp = 23
 		sen.MaxTemp = 100
 	} else {
-		sen.temp = 110
+		sen.temp = 76
 		sen.MaxTemp = 212
 	}
 	sen.change = 0.1
 	sen.offset = 0.1
+	sen.maxChange = 0.8
 
 	sen.cnt = 0
 	sen.direction = -1
@@ -269,6 +271,9 @@ func (sen *DummyTempSensor) OnRead() (float64, error) {
 	sen.temp += sen.change * sen.direction
 	if sen.cnt > 3 {
 		sen.change += (sen.offset)
+		if sen.change > sen.maxChange {
+			sen.change = sen.maxChange
+		}
 		sen.cnt = 0
 	}
 	temp := sen.temp
@@ -278,12 +283,12 @@ func (sen *DummyTempSensor) OnRead() (float64, error) {
 	} else if temp < sen.minTemp {
 		temp = sen.minTemp
 	} else if sen.prevState != sen.state {
-		sen.LogMessage("%s != %s", sen.prevState, sen.state)
+		sen.LogMessage("sensor '%s' set state %s -> %s", sen.Name(), sen.prevState, sen.state)
 		if sen.state == "ON" {
-			sen.LogMessage("%s state to '%s'", sen.Name(), sen.state)
+			//sen.LogMessage("%s state to '%s'", sen.Name(), sen.state)
 			sen.direction = 1
 		} else {
-			sen.LogMessage("%s state to '%s'", sen.Name(), sen.state)
+			//sen.LogMessage("%s state to '%s'", sen.Name(), sen.state)
 			sen.direction = -1
 		}
 		sen.prevState = sen.state
