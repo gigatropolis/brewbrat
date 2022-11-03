@@ -68,34 +68,26 @@ type PropertyConfig struct {
 func DefaultEquipment(dummy bool) ([]EquipmentConfig, error) {
 	eq := []EquipmentConfig{}
 
-	if dummy {
-		eq = append(eq, EquipmentConfig{
-			Name: "Dummy Equipment 1",
-			Type: "SimpleRIMM",
-			Properties: []PropertyConfig{
-				{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Temp Sensor 1", Comment: "Sensor Name", Choice: ""},
-				{Name: "Power On", Type: "float", Hidden: false, Value: "0.8", Comment: "Power goes on if temperature drops below this value", Choice: ""},
-				{Name: "Power Off", Type: "float", Hidden: false, Value: "0.3", Comment: "Power goes Off if temperature goes above this value", Choice: ""},
-				{Name: "Temperature Setpoint", Type: "float", Hidden: false, Value: "135.5", Comment: "Equipment setpoint", Choice: ""},
-				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Pump", Type: "string", Hidden: false, Value: "Dummy Relay 1", Comment: "Sensor controlled by", Choice: ""},
-				{Name: "Agitator", Type: "string", Hidden: false, Value: "Dummy Relay 2", Comment: "Sensor controlled by", Choice: ""},
-				{Name: "Heater", Type: "string", Hidden: false, Value: "Dummy Relay 3", Comment: "Sensor controlled by", Choice: ""},
-				{Name: "Dummy", Type: "bool", Hidden: true, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""}},
-		})
+	sDummy := "false"
 
-	} else {
-		eq = append(eq, EquipmentConfig{
-			Name: "Equipment 1",
-			Type: "SimpleRIMM",
-			Properties: []PropertyConfig{
-				{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Temp Sensor 1", Comment: "Sensor Name", Choice: ""},
-				{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Pump", Type: "string", Hidden: false, Value: "Relay 1", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Agitator", Type: "string", Hidden: false, Value: "Relay 2", Comment: "Units for Sensor", Choice: ""},
-				{Name: "Heater", Type: "string", Hidden: false, Value: "SSR 1", Comment: "Units for Sensor", Choice: ""}},
-		})
+	if dummy {
+		sDummy = "true"
 	}
+	eq = append(eq, EquipmentConfig{
+		Name: "Dummy Equipment 1",
+		Type: "SimpleRIMM",
+		Properties: []PropertyConfig{
+			{Name: "Temperature Sensor", Type: "string", Hidden: false, Value: "Temp Sensor 1", Comment: "Sensor Name", Choice: ""},
+			{Name: "Power On", Type: "float", Hidden: false, Value: "0.8", Comment: "Power goes on if temperature drops below this value", Choice: ""},
+			{Name: "Power Off", Type: "float", Hidden: false, Value: "0.3", Comment: "Power goes Off if temperature goes above this value", Choice: ""},
+			{Name: "Temperature Setpoint", Type: "float", Hidden: false, Value: "135.5", Comment: "Equipment setpoint", Choice: ""},
+			{Name: "Units", Type: "string", Hidden: false, Value: "°F", Comment: "Units for Sensor", Choice: ""},
+			{Name: "Pump", Type: "string", Hidden: false, Value: "Relay 1", Comment: "Sensor controlled by", Choice: ""},
+			{Name: "Agitator", Type: "string", Hidden: false, Value: "Relay 2", Comment: "Sensor controlled by", Choice: ""},
+			{Name: "Heater", Type: "string", Hidden: false, Value: "SSR 1", Comment: "Sensor controlled by", Choice: ""},
+			{Name: "Dummy", Type: "bool", Hidden: true, Value: sDummy, Comment: "Determine if this is a dummy device", Choice: ""}},
+	})
+
 	return eq, nil
 }
 
@@ -193,17 +185,19 @@ func DefaultRelayConfig(relayGPIO []string, ssrGPIO []string, dummy bool) ([]Act
 			},
 		})
 	}
-	for indx := 1; indx <= 4; indx++ {
-		name := fmt.Sprintf("Dummy Relay %d", indx)
-		relayDefined = append(relayDefined, ActorsConfig{
-			Name: name,
-			Type: "DummyRelay",
-			Properties: []PropertyConfig{
-				{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "Dummy relay Name", Choice: ""},
-				{Name: "Dummy", Type: "bool", Hidden: false, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""},
-			},
-		})
-	}
+	/*
+		for indx := 1; indx <= 4; indx++ {
+			name := fmt.Sprintf("Dummy Relay %d", indx)
+			relayDefined = append(relayDefined, ActorsConfig{
+				Name: name,
+				Type: "DummyRelay",
+				Properties: []PropertyConfig{
+					{Name: "Name", Type: "string", Hidden: false, Value: name, Comment: "Dummy relay Name", Choice: ""},
+					{Name: "Dummy", Type: "bool", Hidden: false, Value: "true", Comment: "Determine if this is a dummy device", Choice: ""},
+				},
+			})
+		}
+	*/
 	return relayDefined, nil
 }
 

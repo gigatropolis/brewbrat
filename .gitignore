@@ -15,12 +15,7 @@ www/cmd/server/wwwsvr
 debug
 .vscode
 
-<<<<<<< HEAD
 slackbot/data/AllRecipes2.xml
-=======
-controller/controller
-controller/www/cmd/server/wwwsvr
-slackbot/calc/brat.code-workspace
-controller/configuration.xml
->>>>>>> 5132378cb7ebeedfd0aee89d8082e9002692595f
 controller/dummy_config.xml
+controller/default.xml
+controller/configuration.xml

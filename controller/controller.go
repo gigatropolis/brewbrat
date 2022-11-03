@@ -11,11 +11,19 @@ import (
 
 // SET GO111MODULE=off
 
+const (
+	DefaultSensorCount = 3
+	DefaultRelayCount  = 3
+	DefaultSSRCount    = 1
+	DefaultBuzzerCount = 1
+)
+
 func main() {
 
 	dummyMode := false
 	configName := ""
 	cmdMode := control.RunCmdMode
+	CmdInfo := control.CmdInfo{}
 
 	runCmd := flag.NewFlagSet("run", flag.ExitOnError)
 	runFlgDummy := runCmd.Bool("dummy", false, "Use dummy configuration")
@@ -24,17 +32,19 @@ func main() {
 	configCmd := flag.NewFlagSet("config", flag.ExitOnError)
 	configFlgDummy := configCmd.Bool("dummy", false, "Use dummy configuration")
 	configFlgName := configCmd.String("name", "configuration.xml", "XML configuration name to save configuration")
-	configFlgList := configCmd.Bool("list", false, "List 64 bit addreeses for 1-wire devices available")
-	configFlgSens1 := configCmd.String("sens1", "Temp Sensor 1", "Set sensor 1. format \"<name[:<net address>\". Default \"Temp Sensor 1\"")
-	configFlgSens2 := configCmd.String("sens2", "Temp Sensor 2", "Set sensor 2. format \"<name[:<net address>\". Default \"Temp Sensor 2\"")
-	configFlgSens3 := configCmd.String("sens3", "Temp Sensor 3", "Set sensor 3. format \"<name[:<net address>\". Default \"Temp Sensor 3\"")
+	configFlgList := configCmd.Bool("list", false, "List 64 bit addreeses for 1-wire devices available then exit")
+	configFlgSens1 := configCmd.String("sens1", "unknown", "Set sensor 1. format \"<name[:<net address>\". Default \"Temp Sensor 1\"")
+	configFlgSens2 := configCmd.String("sens2", "unknown", "Set sensor 2. format \"<name[:<net address>\". Default \"Temp Sensor 2\"")
+	configFlgSens3 := configCmd.String("sens3", "unknown", "Set sensor 3. format \"<name[:<net address>\". Default \"Temp Sensor 3\"")
 
 	if len(os.Args) < 2 {
 		fmt.Println("expected 'run' or 'config' subcommands")
 		os.Exit(1)
 	}
 
+	sensors := []string{"Temp Sensor 1", "Temp Sensor 2", "Temp Sensor 3"}
 	mode := os.Args[1]
+
 	switch mode {
 	case "run":
 		runCmd.Parse(os.Args[2:])
@@ -45,6 +55,26 @@ func main() {
 		dummyMode = *configFlgDummy
 		configName = *configFlgName
 		cmdMode = control.ConfigCmdMode
+		tempSensors := []string{*configFlgSens1, *configFlgSens2, *configFlgSens3}
+		f := true
+		for i := 0; i < DefaultSensorCount; i++ {
+			if tempSensors[i] != "default" {
+				f = false
+				break
+			}
+		}
+
+		for i := 0; i < DefaultSensorCount; i++ {
+			if !f {
+				if tempSensors[i] != "unknown" {
+					CmdInfo.Sensors = append(CmdInfo.Sensors, tempSensors[i])
+					continue
+				}
+				CmdInfo.Sensors = append(CmdInfo.Sensors, "")
+			} else {
+				CmdInfo.Sensors = append(CmdInfo.Sensors, fmt.Sprintf("Temp Sensor %d", i+1))
+			}
+		}
 		//os.Exit(1)
 	}
 
@@ -71,8 +101,6 @@ func main() {
 	logger.Init()
 	logger.SetDebug(true)
 	logger.Add("default", control.LogLevelAll, os.Stdout)
-
-	sensors := []string{"Temp Sensor 1", "Temp Sensor 2", "Temp Sensor 3"}
 
 	if mode == "config" {
 		sensors[0] = *configFlgSens1

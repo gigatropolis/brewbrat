@@ -60,6 +60,16 @@ type Control struct {
 	chnAlive       chan int
 }
 
+type CmdInfo struct {
+	IsDummyConfig             bool
+	CmdMode                   int
+	AvailableLinknetAddresses []uint64
+	FileName                  string
+	Sensors                   []string
+	Relays                    []string
+	SSRs                      []string
+}
+
 func (ctrl *Control) InitController(reg *RegDevices, log *Logger, sensors []string, cmdMode int, fileName string, isDummyController bool) error {
 	ctrl.regDevices = reg
 	ctrl.logger = log
@@ -80,6 +90,14 @@ func (ctrl *Control) InitController(reg *RegDevices, log *Logger, sensors []stri
 
 	ctrl.sensorValues = make(SensorValues)
 
+	var availableLinknetAddresses []uint64
+	if !ctrl.isDummyController {
+		availableLinknetAddresses, _ = GetActiveNetlinkAddresses(ctrl.logger)
+	}
+
+	rels := []string{"GPIO21", "GPIO20", "GPIO19"}
+	ssrs := []string{"GPIO16"}
+
 	ctrl.logger.LogMessage("fileName=%s, mode=%d", fileName, cmdMode)
 	if cmdMode == RunCmdMode {
 		buf, err := ioutil.ReadFile(fileName)
@@ -89,20 +107,20 @@ func (ctrl *Control) InitController(reg *RegDevices, log *Logger, sensors []stri
 			err = xml.Unmarshal(buf, ctrl.configuration)
 			if err != nil {
 				ctrl.logger.LogError("Unable to parse configuration file: '%s'. Will use default configuration", fileName)
-				ctrl.SetDefaultConfiguration()
+				ctrl.SetDefaultConfiguration(availableLinknetAddresses, rels, ssrs)
 			}
 		} else {
 			ctrl.logger.LogError("Unable to read configuration file: '%s'. Will use default configuration", fileName)
-			ctrl.SetDefaultConfiguration()
+			ctrl.SetDefaultConfiguration(availableLinknetAddresses, rels, ssrs)
 		}
 	} else if cmdMode == ConfigCmdMode {
 		ctrl.logger.LogMessage("fileName=%s", fileName)
 		if fileName == "default" {
 			ctrl.configFileName = "configuration.xml"
-			ctrl.SetDefaultConfiguration()
+			ctrl.SetDefaultConfiguration(availableLinknetAddresses, rels, ssrs)
 		} else {
 
-			ctrl.SetDefaultConfiguration()
+			ctrl.SetDefaultConfiguration(availableLinknetAddresses, rels, ssrs)
 
 			//var availableLinknetAddresses []uint64
 			//if !ctrl.isDummyController {
@@ -131,15 +149,8 @@ func (ctrl *Control) InitController(reg *RegDevices, log *Logger, sensors []stri
 	return nil
 }
 
-func (ctrl *Control) SetDefaultConfiguration() {
+func (ctrl *Control) SetDefaultConfiguration(availableLinknetAddresses []uint64, rels []string, ssrs []string) {
 
-	var availableLinknetAddresses []uint64
-	if !ctrl.isDummyController {
-		availableLinknetAddresses, _ = GetActiveNetlinkAddresses(ctrl.logger)
-	}
-
-	rels := []string{"GPIO21", "GPIO20"}
-	ssrs := []string{"GPIO16"}
 	defaultConfiguration, conErr := config.DefaultConfiguration(availableLinknetAddresses, rels, ssrs, ctrl.isDummyController)
 	if conErr != nil {
 		ctrl.logger.LogMessage("Unable to create default configuration::%s", conErr.Error())
@@ -277,11 +288,11 @@ func (ctrl *Control) HandleWebMessage(msg server.ServerCommand) {
 		if relay, ok := ctrl.actors[name]; ok {
 			state := relay.GetState()
 			if state == StateOn {
-				//ctrl.logger.LogMessage("server.CmdGetActorValue %s ON", name)
+				ctrl.logger.LogMessage("server.CmdGetActorValue %s ON", name)
 				msg.ChanReturn <- "ON"
 			} else {
 				ctrl.logger.LogMessage("server.CmdGetActorValue %s OFF", name)
-				//msg.ChanReturn <- "OFF"
+				msg.ChanReturn <- "OFF"
 			}
 		} else {
 			msg.ChanReturn <- "bad"
@@ -305,7 +316,7 @@ func (ctrl *Control) HandleWebMessage(msg server.ServerCommand) {
 
 // OnHandleMessages called when HandleDevices() is idle to do any needed processing.
 func (ctrl *Control) OnHandleMessages() {
-
+	ctrl.logger.LogMessage("(ctrl *Control) OnHandleMessages....")
 }
 
 // HandleWebServer recieves all incoming messages from web server
