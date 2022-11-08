@@ -21,16 +21,19 @@ const (
 func main() {
 
 	dummyMode := false
+	debugMode := false
 	configName := ""
 	cmdMode := control.RunCmdMode
 	CmdInfo := control.CmdInfo{}
 
 	runCmd := flag.NewFlagSet("run", flag.ExitOnError)
 	runFlgDummy := runCmd.Bool("dummy", false, "Use dummy configuration")
+	runFlgDebug := runCmd.Bool("debug", false, "Run in debug mode")
 	runFlgConfig := runCmd.String("name", "configuration.xml", "XML configuration file to load")
 
 	configCmd := flag.NewFlagSet("config", flag.ExitOnError)
 	configFlgDummy := configCmd.Bool("dummy", false, "Use dummy configuration")
+	configFlgDebug := runCmd.Bool("debug", false, "Run in debug mode")
 	configFlgName := configCmd.String("name", "configuration.xml", "XML configuration name to save configuration")
 	configFlgList := configCmd.Bool("list", false, "List 64 bit addreeses for 1-wire devices available then exit")
 	configFlgSens1 := configCmd.String("sens1", "unknown", "Set sensor 1. format \"<name[:<net address>\". Default \"Temp Sensor 1\"")
@@ -50,10 +53,12 @@ func main() {
 		runCmd.Parse(os.Args[2:])
 		dummyMode = *runFlgDummy
 		configName = *runFlgConfig
+		debugMode = *runFlgDebug
 	case "config":
 		configCmd.Parse(os.Args[2:])
 		dummyMode = *configFlgDummy
 		configName = *configFlgName
+		debugMode = *configFlgDebug
 		cmdMode = control.ConfigCmdMode
 		tempSensors := []string{*configFlgSens1, *configFlgSens2, *configFlgSens3}
 		f := true
@@ -99,7 +104,7 @@ func main() {
 
 	logger := control.Logger{}
 	logger.Init()
-	logger.SetDebug(true)
+	logger.SetDebug(debugMode)
 	logger.Add("default", control.LogLevelAll, os.Stdout)
 
 	if mode == "config" {

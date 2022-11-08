@@ -239,7 +239,7 @@ func (sen *DummyTempSensor) GetDefaultsConfig() ([]config.PropertyConfig, error)
 }
 
 func (sen *DummyTempSensor) SendNotification(notify string) error {
-	sen.LogMessage("%s: set sen.state = %s", sen.Name(), notify)
+	sen.LogDebug("%s: set sen.state = %s", sen.Name(), notify)
 	sen.state = notify
 	return nil
 }
@@ -283,12 +283,12 @@ func (sen *DummyTempSensor) OnRead() (float64, error) {
 	} else if temp < sen.minTemp {
 		temp = sen.minTemp
 	} else if sen.prevState != sen.state {
-		sen.LogMessage("sensor '%s' set state %s -> %s", sen.Name(), sen.prevState, sen.state)
+		sen.LogDebug("sensor '%s' set state %s -> %s", sen.Name(), sen.prevState, sen.state)
 		if sen.state == "ON" {
-			//sen.LogMessage("%s state to '%s'", sen.Name(), sen.state)
+			//sen.LogDebug("%s state to '%s'", sen.Name(), sen.state)
 			sen.direction = 1
 		} else {
-			//sen.LogMessage("%s state to '%s'", sen.Name(), sen.state)
+			//sen.LogDebug("%s state to '%s'", sen.Name(), sen.state)
 			sen.direction = -1
 		}
 		sen.prevState = sen.state

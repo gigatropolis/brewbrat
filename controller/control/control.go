@@ -288,10 +288,10 @@ func (ctrl *Control) HandleWebMessage(msg server.ServerCommand) {
 		if relay, ok := ctrl.actors[name]; ok {
 			state := relay.GetState()
 			if state == StateOn {
-				ctrl.logger.LogMessage("server.CmdGetActorValue %s ON", name)
+				ctrl.logger.LogDebug("server.CmdGetActorValue %s ON", name)
 				msg.ChanReturn <- "ON"
 			} else {
-				ctrl.logger.LogMessage("server.CmdGetActorValue %s OFF", name)
+				ctrl.logger.LogDebug("server.CmdGetActorValue %s OFF", name)
 				msg.ChanReturn <- "OFF"
 			}
 		} else {
@@ -316,7 +316,7 @@ func (ctrl *Control) HandleWebMessage(msg server.ServerCommand) {
 
 // OnHandleMessages called when HandleDevices() is idle to do any needed processing.
 func (ctrl *Control) OnHandleMessages() {
-	ctrl.logger.LogMessage("(ctrl *Control) OnHandleMessages....")
+	//ctrl.logger.LogDebug("(ctrl *Control) OnHandleMessages....")
 }
 
 // HandleWebServer recieves all incoming messages from web server
@@ -326,16 +326,16 @@ func (ctrl *Control) HandleWebServer() {
 	for true {
 		select {
 		case in := <-ctrl.svrOut:
-			//ctrl.logger.LogMessage("Got message")
+			//ctrl.logger.LogDebug("Got message")
 			ctrl.HandleWebMessage(in)
 		case <-t.C:
 			if tickCount > 10 {
-				ctrl.logger.LogMessage("tick")
+				ctrl.logger.LogDebug("tick")
 				tickCount = 0
 			}
 		}
+		tickCount++
 	}
-	tickCount++
 }
 
 // HandleDevices  listens on device channels like sensors and equipment to handle incomming messages.
@@ -384,7 +384,7 @@ func (ctrl *Control) HandleDevices() {
 				acts := []ActValue{}
 				if needUpdateSensors {
 					for name, senVal := range ctrl.sensorValues {
-						//fmt.Printf("senVal '%s' %0.2f\n", name, senVal)
+						ctrl.logger.LogDebug("senVal '%s' %0.2f\n", name, senVal)
 						sens = append(sens, SensValue{Name: name, Value: senVal})
 					}
 				}
@@ -434,7 +434,7 @@ func toValueInterface(sType string, value string) interface{} {
 		i, _ = strconv.ParseInt(value, 10, 64)
 	case "float":
 		f, _ := strconv.ParseFloat(value, 64)
-		// fmt.Println("toValueInterface (float) =", f)
+		// ctrl.logger.LogDebug("toValueInterface (float) =", f)
 		return f
 	default:
 		i = value

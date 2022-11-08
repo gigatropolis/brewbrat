@@ -100,7 +100,7 @@ func (eq *Equipment) InitEquipment(name string, logger *Logger, properties []Pro
 	default:
 		eq.Mode = EqModeHistorisis
 	}
-	//eq.LogMessage("InitEquipment %d", eq.Mode)
+	//eq.LogDebug("InitEquipment %d", eq.Mode)
 
 	return nil
 }
@@ -172,29 +172,29 @@ func (eq *Equipment) readMessages() error {
 }
 
 func (eq *Equipment) handleMessage(message EquipMessage) error {
-	//eq.LogMessage("eq.handleMessage %d", message.Cmd)
+	//eq.LogDebug("eq.handleMessage %d", message.Cmd)
 	switch message.Cmd {
 	case CmdUpdateDevices:
 		for _, sensor := range message.Sensors {
-			//eq.LogMessage("start CmdUpdateDevices: eq.handleMessage %s", sensor.Name)
+			//eq.LogDebug("start CmdUpdateDevices: eq.handleMessage %s", sensor.Name)
 			s, ok := eq.Sensors[sensor.Name]
 			if ok {
-				//eq.LogMessage("sensor.Name: eq.handleMessage %s", sensor.Name)
+				//eq.LogDebug("sensor.Name: eq.handleMessage %s", sensor.Name)
 				s.Value = sensor.Value
 				eq.Sensors[sensor.Name] = s
 			}
 		}
 		for _, actor := range message.Actors {
-			//eq.LogMessage("start CmdUpdateDevices::eq.handleMessage '%s'", actor.Name)
+			//eq.LogDebug("start CmdUpdateDevices::eq.handleMessage '%s'", actor.Name)
 			a, ok := eq.Actors[actor.Name]
 			if ok {
 				if a.State != actor.State && eq.IsDummyDevice() {
-					//eq.LogMessage("start CmdUpdateDevices: eq.handleMessage '%s' Handled", actor.Name)
+					//eq.LogDebug("start CmdUpdateDevices: eq.handleMessage '%s' Handled", actor.Name)
 					cmd := "OFF"
 					if actor.State == StateOn {
 						cmd = "ON"
 					}
-					//eq.LogMessage("Actor out %s", actor.Name)
+					//eq.LogDebug("Actor out %s", actor.Name)
 					name := eq.getActorControl(actor.Name)
 
 					eq.out <- EquipMessage{DeviceName: name, Cmd: CmdSendNotification, StrParam1: cmd}
@@ -260,7 +260,7 @@ func (rim *SimpleRIMM) Run() error {
 }
 
 func (rim *SimpleRIMM) NextStep() error {
-	//rim.LogMessage("rim.NextStep")
+	//rim.LogDebug("rim.NextStep")
 
 	switch rim.State {
 	case EqStateActive:
@@ -270,7 +270,7 @@ func (rim *SimpleRIMM) NextStep() error {
 }
 
 func (rim *SimpleRIMM) updateActors() error {
-	//rim.LogMessage("rim.updateActors")
+	//rim.LogDebug("rim.updateActors")
 
 	var err error = nil
 	switch rim.Mode {
@@ -285,8 +285,8 @@ func (rim *SimpleRIMM) updateActors() error {
 func (rim *SimpleRIMM) updateHistorisis() error {
 
 	temp, ok := rim.Sensors[rim.TempProbeName]
-	//rim.LogMessage("temp.Value %0.2f", temp.Value)
-	//rim.LogMessage("rim.PowerOff %0.2f", rim.PowerOff)
+	//rim.LogDebug("temp.Value %0.2f", temp.Value)
+	//rim.LogDebug("rim.PowerOff %0.2f", rim.PowerOff)
 	if !ok {
 		return nil
 	}
@@ -295,7 +295,7 @@ func (rim *SimpleRIMM) updateHistorisis() error {
 	if err != nil {
 		return nil
 	}
-	//rim.LogMessage("setpoint %0.2f", setpoint)
+	//rim.LogDebug("setpoint %0.2f", setpoint)
 
 	if temp.Value > (setpoint - rim.PowerOff) {
 		if act, ok := rim.Actors[rim.HeaterName]; ok {

@@ -42,7 +42,7 @@ func (act *Actor) Init(name string, logger *Logger, properties []Property) error
 	gpio, ok := props.GetProperty("GPIO")
 	if ok {
 		act.Pin = gpioreg.ByName(gpio.Value.(string))
-		act.LogMessage("Set '%s' to '%s'", gpio.Name, gpio.Value.(string))
+		act.LogDebug("Set '%s' to '%s'", gpio.Name, gpio.Value.(string))
 	}
 	return nil
 }
@@ -91,14 +91,14 @@ func (rel *DummyRelay) OnStop() error {
 }
 
 func (rel *DummyRelay) On() error {
-	rel.LogMessage("%s ON", rel.Name())
+	rel.LogDebug("%s ON", rel.Name())
 	rel.state = StateOn
 	return nil
 }
 
 func (rel *DummyRelay) Off() error {
 
-	rel.LogMessage("%s OFF", rel.Name())
+	rel.LogDebug("%s OFF", rel.Name())
 	rel.state = StateOff
 	return nil
 }
