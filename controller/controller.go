@@ -33,7 +33,7 @@ func main() {
 
 	configCmd := flag.NewFlagSet("config", flag.ExitOnError)
 	configFlgDummy := configCmd.Bool("dummy", false, "Use dummy configuration")
-	configFlgDebug := runCmd.Bool("debug", false, "Run in debug mode")
+	configFlgDebug := configCmd.Bool("debug", false, "Run in debug mode")
 	configFlgName := configCmd.String("name", "configuration.xml", "XML configuration name to save configuration")
 	configFlgList := configCmd.Bool("list", false, "List 64 bit addreeses for 1-wire devices available then exit")
 	configFlgSens1 := configCmd.String("sens1", "unknown", "Set sensor 1. format \"<name[:<net address>\". Default \"Temp Sensor 1\"")
